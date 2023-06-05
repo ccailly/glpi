@@ -4361,9 +4361,10 @@ JAVASCRIPT;
                             $condition .= " OR $assigngroup_table.`groups_id`
                                              IN (" . implode(",", $_SESSION['glpigroups']) . ")";
                         }
-                        if (Session::haveRight('ticket', Ticket::ASSIGN)) {
-                            $condition .= " OR `glpi_tickets`.`status`='" . CommonITILObject::INCOMING . "'";
-                        }
+                    }
+
+                    if (Session::haveRight('ticket', Ticket::READNEWTICKET)) {
+                        $condition .= " OR `glpi_tickets`.`status`='" . CommonITILObject::INCOMING . "'";
                     }
 
                     if (
