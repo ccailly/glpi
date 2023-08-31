@@ -2789,6 +2789,7 @@ class Toolbox
                             $item instanceof Ticket
                             && $item->getID()
                             && isset($image['tickets_id'])
+                            && $image['tickets_id'] > 0
                             && $image['tickets_id'] != $item->getID()
                         ) {
                             $docitem = new Document_Item();
