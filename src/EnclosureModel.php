@@ -40,4 +40,19 @@ class EnclosureModel extends CommonDCModelDropdown
     {
         return _n('Enclosure model', 'Enclosure models', $nb);
     }
+
+    public function defineTabs($options = [])
+    {
+        $ong = parent::defineTabs($options);
+
+        // Add stencil tab if there is at least one picture field defined
+        foreach ((new EnclosureModelStencil())->getPicturesFields() as $picture_field) {
+            if (!empty($this->getItemtypeOrModelPicture($picture_field))) {
+                $this->addStandardTab('EnclosureModelStencil', $ong, $options);
+                break;
+            }
+        }
+
+        return $ong;
+    }
 }

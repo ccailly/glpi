@@ -74,6 +74,10 @@ class Stencil extends CommonDBChild implements ZonableModelPicture
             case NetworkEquipmentModel::getType():
                 $stencil = new NetworkEquipmentModelStencil();
                 break;
+            case Enclosure::getType():
+            case EnclosureModel::getType():
+                $stencil = new EnclosureModelStencil();
+                break;
             default:
                 return null;
         }
@@ -155,6 +159,17 @@ class Stencil extends CommonDBChild implements ZonableModelPicture
      * @return array
      */
     public function getPicturesFields(): array
+    {
+        return [];
+    }
+
+    /**
+     * Returns the fields to display in the stencil editor
+     *
+     * @param int $rand
+     * @return array
+     */
+    public function getAdditionalFields(int $rand): array
     {
         return [];
     }
@@ -290,6 +305,7 @@ class Stencil extends CommonDBChild implements ZonableModelPicture
         }
 
         $self = self::getStencilFromItem($item);
+        $rand = mt_rand();
         TemplateRenderer::getInstance()->display('stencil/editor.html.twig', [
             'item'              => $item,
             'stencil'           => $this,
@@ -300,10 +316,12 @@ class Stencil extends CommonDBChild implements ZonableModelPicture
             'zones'             => json_decode($self->fields['zones'] ?? '{}', true),
             'nb_zones'          => $self->fields['nb_zones'] ?? 1,
             'pictures'          => $pictures,
+            'additional_fields' => $this->getAdditionalFields($rand),
             'params'            => array_merge(
                 $this->getParams(true),
                 ['is_editor_view' => true]
             ),
+            'rand'              => $rand,
         ]);
     }
 

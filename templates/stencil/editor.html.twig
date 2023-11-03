@@ -31,8 +31,6 @@
  # ---------------------------------------------------------------------
  #}
 
-{% set rand = random() %}
-
 <div id="#stencil-editor-{{ rand }}">
     <form id="stencil-editor-form-{{ rand }}" method='post' class="mb-2" action="{{ path('front/stencil.form.php') }}">
         <input type="hidden" name="_glpi_csrf_token" value="{{ csrf_token() }}"/>
@@ -105,6 +103,16 @@
                         </div>
                     </div>
                 </div>
+                {% for additional_field in additional_fields %}
+                    <div class="col-auto">
+                        <div class="row">
+                            {{ additional_field.label|raw }}
+                            <div class="col-auto">
+                                {{ additional_field.field|raw }}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
                 <div class="col-auto">
                     <button type="button" id="save-zone-data-{{ rand }}" class="btn btn-primary">
                         <i class="ti ti-device-floppy"></i>
@@ -153,6 +161,11 @@
     {% endif %}
 
     <script>
-        new StencilEditor(document.getElementById('#stencil-editor-{{ rand }}'), {{ rand }}, {{ zones_json|raw }});
+        new StencilEditor(
+            document.getElementById('#stencil-editor-{{ rand }}'),
+            {{ rand }},
+            {{ zones_json|raw }},
+            {{ additional_fields|map(field => {'id': field.id, 'default_value': field.default_value ?? ''})|json_encode|raw }}
+        );
     </script>
 </div>

@@ -34,7 +34,7 @@
 // Needed for JS lint validation
 /* global _ */
 
-const StencilEditor = function (container, rand, zones_definition) {
+const StencilEditor = function (container, rand, zones_definition, additional_fields) {
     let zones = zones_definition;
 
     let croppers = [];
@@ -133,6 +133,15 @@ const StencilEditor = function (container, rand, zones_definition) {
         $(container).find('#zone_label-' + rand).val(zone['label'] ?? current_zone);
         $(container).find('#zone_number-' + rand).val(zone['number'] ?? current_zone).data('zone-index', current_zone);
 
+        // set additional fields data (if any)
+        if (additional_fields) {
+            Object.entries(additional_fields).forEach(function ([field, data]) {
+                // Retrieve the value from the zone definition or set an empty string
+                let value = zone['additional_fields'] ? zone['additional_fields'][field] ?? null : null;
+                $(container).find('#' + data.id).val(value ?? data.default_value).trigger('change');
+            });
+        }
+
         croppers.forEach(function (cropper, side) {
             cropper.getCropperSelection()
                 .$reset()
@@ -216,6 +225,21 @@ const StencilEditor = function (container, rand, zones_definition) {
         zones[zoneIndex]['y_percent'] = sel_rel_y * 100 / img_h;
         zones[zoneIndex]['height_percent'] = sel_h * 100 / img_h;
         zones[zoneIndex]['width_percent'] = sel_w * 100 / img_w;
+
+        // save additional fields data (if any)
+        if (additional_fields) {
+            Object.entries(additional_fields).forEach(function ([field, data]) {
+                if (!zones[zoneIndex]['additional_fields']) {
+                    zones[zoneIndex]['additional_fields'] = {};
+                }
+
+                console.log(field, data, zones[zoneIndex]);
+
+                zones[zoneIndex]['additional_fields'][field] = $(container).find('#' + data.id).val();
+
+                console.log(field, data, zones[zoneIndex]);
+            });
+        }
 
         _this.editorDisable();
 

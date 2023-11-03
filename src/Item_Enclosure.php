@@ -103,6 +103,11 @@ class Item_Enclosure extends CommonDBRelation
             )
         );
 
+        $stencil = NetworkEquipmentModelStencil::getStencilFromItem($enclosure);
+        if ($stencil) {
+            $stencil->displayStencil();
+        }
+
         if ($enclosure->canAddItem('itemtype')) {
             echo "<div class='firstbloc'>";
             Html::showSimpleForm(
@@ -147,7 +152,7 @@ class Item_Enclosure extends CommonDBRelation
             foreach ($items as $row) {
                 $item = new $row['itemtype']();
                 $item->getFromDB($row['items_id']);
-                echo "<tr lass='tab_bg_1'>";
+                echo "<tr id=\"position_number_{$row['position']}\" class='tab_bg_1'>";
                 if ($canedit) {
                     echo "<td>";
                     Html::showMassiveActionCheckBox(__CLASS__, $row["id"]);
