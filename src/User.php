@@ -558,7 +558,9 @@ class User extends CommonDBTM
      */
     public function getFromDBbyDn($user_dn)
     {
-        return $this->getFromDBByCrit(['user_dn' => $user_dn]);
+        return $this->getFromDBByCrit([
+            'user_dn_hash' => hash('sha256', $user_dn)
+        ]);
     }
 
     /**
