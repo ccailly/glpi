@@ -56,7 +56,10 @@
     "brotli_compress",
 
     "// composer autoloader",
-    "Composer\\Autoload\\ClassLoader"
+    "Composer\\Autoload\\ClassLoader",
+
+    "// hash function is now bundled since PHP 7.4",
+    "hash"
   ],
   "scan-files": [
     "ajax/**/*.php",
