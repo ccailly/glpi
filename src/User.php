@@ -550,8 +550,6 @@ class User extends CommonDBTM
     /**
      * Retrieve a user from the database using it's dn.
      *
-     * @since 0.84
-     *
      * @param string $user_dn dn of the user
      *
      * @return boolean
@@ -559,7 +557,7 @@ class User extends CommonDBTM
     public function getFromDBbyDn($user_dn)
     {
         return $this->getFromDBByCrit([
-            'user_dn_hash' => hash('sha256', $user_dn)
+            'user_dn_hash' => md5($user_dn)
         ]);
     }
 
@@ -892,6 +890,14 @@ class User extends CommonDBTM
                 $right->add($affectation);
             }
         }
+
+        // Hash user_dn if set
+        if (isset($this->input['user_dn'])) {
+            $this->update([
+                'id' => $this->fields['id'],
+                'user_dn_hash' => md5($this->input['user_dn'])
+            ]);
+        }
     }
 
 
@@ -1186,6 +1192,14 @@ class User extends CommonDBTM
                 ],
                 true
             );
+        }
+
+        // Hash user_dn if is updated
+        if (in_array('user_dn', $this->updates)) {
+            $this->update([
+                'id' => $this->fields['id'],
+                'user_dn_hash' => md5($this->fields['user_dn'])
+            ]);
         }
     }
 

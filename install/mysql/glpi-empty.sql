@@ -7610,7 +7610,7 @@ CREATE TABLE `glpi_users` (
   `password_forget_token` char(40) DEFAULT NULL,
   `password_forget_token_date` timestamp NULL DEFAULT NULL,
   `user_dn` text,
-  `user_dn_hash` varchar(255) GENERATED ALWAYS AS (sha2(`user_dn`,256)) VIRTUAL,
+  `user_dn_hash` varchar(255),
   `registration_number` varchar(255) DEFAULT NULL,
   `show_count_on_tabs` tinyint DEFAULT NULL,
   `refresh_views` int DEFAULT NULL,
