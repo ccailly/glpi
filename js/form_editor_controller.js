@@ -362,6 +362,13 @@ class GlpiFormEditorController
             } else if (type === "question") {
                 // The input is for a question
                 base_input_index =  `_questions[${item_index}]`;
+
+                // Check if the input is an option (a parent of the node has the data-glpi-form-editor-specific-question-options attribute)
+                let is_option = $(input).parents('[data-glpi-form-editor-specific-question-options]').length > 0;
+
+                if (is_option) {
+                    base_input_index += `[extra_data]`;
+                }
             } else {
                 throw new Error(`Unknown item type: ${type}`);
             }
@@ -845,10 +852,21 @@ class GlpiFormEditorController
             .find("[data-glpi-form-editor-question-type-specific]");
         specific.children().remove();
 
+        // Clear the extra data of the question
+        const extra_data = question
+            .find("[data-glpi-form-editor-specific-question-options]");
+        extra_data.children().remove();
+
         // Find the specific content of the given type
         const new_specific_content = this
             .#getQuestionTemplate(type)
             .find("[data-glpi-form-editor-question-type-specific]")
+            .children();
+
+        // Find the extra data of the given type
+        const new_extra_data = this
+            .#getQuestionTemplate(type)
+            .find("[data-glpi-form-editor-specific-question-options]")
             .children();
 
         // Copy the specific form of the new question type into the question
@@ -856,6 +874,26 @@ class GlpiFormEditorController
             new_specific_content,
             specific,
         );
+
+        // Copy the extra data of the new question type into the question
+        this.#copy_template(
+            new_extra_data,
+            extra_data,
+        );
+
+        Object.entries(window.flatpickr_configs).forEach(([id, config]) => {
+            // Check if the id is in the question and if it's visible
+            if (
+                question.find(`${id}`).length > 0
+                && question.find(`${id}`).is(":visible")
+            ) {
+                // Remove the last input
+                $(`${id}`).find('input').last().remove();
+
+                // Reinit the flatpickr instance
+                $(`${id}`).flatpickr(config);
+            }
+        });
     }
 
     /**

@@ -35,113 +35,105 @@
 
 namespace Glpi\Form\QuestionType;
 
+use DateTime;
 use Glpi\Application\View\TemplateRenderer;
 use Glpi\Form\Question;
 use Override;
 
-/**
- * Long answers are multiple lines inputs used to answer questions with as much details as needed.
- */
-final class QuestionTypeLongAnswer implements QuestionTypeInterface
+final class QuestionTypeDateAndTimeDateTime extends QuestionTypeDateAndTime
 {
-    #[Override]
-    public function __construct()
-    {
-    }
-
-    #[Override]
-    public function renderAdminstrationTemplate(?Question $question): string
-    {
-        $template = <<<TWIG
-            {% import 'components/form/fields_macros.html.twig' as fields %}
-
-            {{ fields.textareaField(
-                'default_value',
-                question is not null ? question.fields.default_value : '',
-                "",
-                {
-                    'placeholder': placeholder,
-                    'enable_richtext': true,
-                    'editor_height': "0",
-                    'rows' : 1,
-                    'init': question is not null ? true : false,
-                    'is_horizontal': false,
-                    'full_width'   : true,
-                    'no_label'     : true,
-                }
-            ) }}
-TWIG;
-
-        $twig = TemplateRenderer::getInstance();
-        return $twig->renderFromStringTemplate($template, [
-            'question'    => $question,
-            'placeholder' => __('Long text'),
-        ]);
-    }
-
-    #[Override]
-    public function renderAdminstrationOptionsTemplate(?Question $question): string
-    {
-        return '';
-    }
-
-    #[Override]
-    public function renderEndUserTemplate(Question $question): string
-    {
-        // TODO: handle required
-        $template = <<<TWIG
-            {% import 'components/form/fields_macros.html.twig' as fields %}
-
-            {{ fields.textareaField(
-                "answers[" ~ question.fields.id ~ "]",
-                question.fields.default_value,
-                "",
-                {
-                    'enable_richtext': true,
-                    'editor_height': "0",
-                    'rows' : 1,
-                    'init': question is not null ? true : false,
-                    'is_horizontal': false,
-                    'full_width'   : true,
-                    'no_label'     : true,
-                }
-            ) }}
-TWIG;
-
-        $twig = TemplateRenderer::getInstance();
-        return $twig->renderFromStringTemplate($template, [
-            'question' => $question,
-        ]);
-    }
-
-    #[Override]
-    public function renderAnswerTemplate($answer): string
-    {
-        $template = <<<TWIG
-            <div class="form-control-plaintext">{{ answer|safe_html }}</div>
-TWIG;
-
-        $twig = TemplateRenderer::getInstance();
-        return $twig->renderFromStringTemplate($template, [
-            'answer' => $answer,
-        ]);
-    }
-
     #[Override]
     public function getName(): string
     {
-        return __("Long answer");
-    }
-
-    #[Override]
-    public function getCategory(): QuestionTypeCategory
-    {
-        return QuestionTypeCategory::LONG_ANSWER;
+        return __('DateTime');
     }
 
     #[Override]
     public function getWeight(): int
     {
-        return 10;
+        return 20;
+    }
+
+    #[Override]
+    public function formatAnswer($answer): string
+    {
+        return (new DateTime($answer))->format('Y-m-d H:i:s');
+    }
+
+    #[Override]
+    public function getCurrentTimeOptionLabel(): string
+    {
+        return __('Use current date and time as default value');
+    }
+
+    #[Override]
+    public function getDefaultValue(?Question $question): string
+    {
+        $value = '';
+        if ($question !== null) {
+            if ($this->isDefaultValueCurrentTime($question)) {
+                $value = (new DateTime())->format('Y-m-d H:i:s');
+            } else {
+                $value = $question->fields['default_value'];
+            }
+        }
+
+        return $value;
+    }
+
+    #[Override]
+    public function renderAdminstrationTemplate(
+        ?Question $question = null
+    ): string {
+        $template = <<<TWIG
+            {% import 'components/form/fields_macros.html.twig' as fields %}
+
+            {% set rand = random() %}
+
+            {{ fields.datetimeField(
+                'default_value',
+                question is not null ? question.fields.default_value : '',
+                "",
+                {
+                    'full_width'   : true,
+                    'no_label'     : true,
+                    'rand'         : rand,
+                    'disabled'     : is_default_value_current_time,
+                }
+            ) }}
+TWIG;
+        $template .= parent::renderAdminstrationTemplate($question);
+
+        $twig = TemplateRenderer::getInstance();
+        return $twig->renderFromStringTemplate($template, [
+            'question'          => $question,
+            'value'             => $this->getDefaultValue($question),
+            'is_default_value_current_time' => $this->isDefaultValueCurrentTime($question),
+        ]);
+    }
+
+    #[Override]
+    public function renderEndUserTemplate(
+        Question $question,
+    ): string {
+        $template = <<<TWIG
+            {% import 'components/form/fields_macros.html.twig' as fields %}
+
+            {{ fields.datetimeField(
+                "answers[" ~ question.fields.id ~ "]",
+                value,
+                "",
+                {
+                    'full_width'   : true,
+                    'no_label'     : true,
+                }
+            ) }}
+TWIG;
+
+        $twig = TemplateRenderer::getInstance();
+        return $twig->renderFromStringTemplate($template, [
+            'question'   => $question,
+            'value'      => $this->getDefaultValue($question),
+        ]);
     }
 }

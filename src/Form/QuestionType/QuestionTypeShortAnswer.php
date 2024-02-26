@@ -80,6 +80,12 @@ TWIG;
     }
 
     #[Override]
+    public function renderAdminstrationOptionsTemplate(?Question $question): string
+    {
+        return '';
+    }
+
+    #[Override]
     public function renderEndUserTemplate(
         Question $question,
     ): string {

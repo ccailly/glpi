@@ -82,6 +82,7 @@ class QuestionTypesManager extends DbTestCase
         $expected_categories = [
             QuestionTypeCategory::SHORT_ANSWER,
             QuestionTypeCategory::LONG_ANSWER,
+            QuestionTypeCategory::DATE_AND_TIME,
         ];
 
         // Manual array comparison, `isEqualTo`  doesn't seem to work properly

@@ -208,6 +208,7 @@
 {% macro date(name, value, options = {}) %}
     {% set options = {
         'rand': random(),
+        'noCalendar': false,
         'enableTime': false,
         'checkIsExpired ': false,
         'clearable': false,
@@ -258,10 +259,13 @@
 
     {% set locale = get_current_locale() %}
     {% set date_format = options.enableTime ? 'Y-m-d H:i:S' : 'Y-m-d' %}
+    {% set date_format = options.noCalendar ? 'H:i:S' : date_format %}
     {% set alt_format = call('Toolbox::getDateFormat', ['js']) ~ (options.enableTime ? ' H:i:S' : '') %}
+    {% set alt_format = options.noCalendar ? 'H:i:S' : alt_format %}
     <script>
         $(function() {
             $("#{{ options.id }}").flatpickr({
+                noCalendar: {{ options.noCalendar ? "true" : "false" }},
                 wrap: true,
                 altInput: true,
                 dateFormat: '{{ date_format }}',
@@ -288,6 +292,14 @@
 {% macro datetime(name, value, options = {}) %}
     {{ _self.date(name, value, options|merge({
         'enableTime': true
+    })) }}
+{% endmacro %}
+
+
+{% macro time(name, value, options = {}) %}
+    {{ _self.date(name, value, options|merge({
+        'enableTime': true,
+        'noCalendar': true
     })) }}
 {% endmacro %}
 

@@ -39,6 +39,9 @@ use CommonGLPI;
 use Computer;
 use DbTestCase;
 use Glpi\Form\AnswersHandler\AnswersHandler;
+use Glpi\Form\QuestionType\QuestionTypeDateAndTimeDate;
+use Glpi\Form\QuestionType\QuestionTypeDateAndTimeDateTime;
+use Glpi\Form\QuestionType\QuestionTypeDateAndTimeTime;
 use Glpi\Form\QuestionType\QuestionTypeLongAnswer;
 use Glpi\Form\QuestionType\QuestionTypeShortAnswerEmail;
 use Glpi\Form\QuestionType\QuestionTypeShortAnswerNumber;
@@ -234,12 +237,18 @@ class AnswersSet extends DbTestCase
                 ->addQuestion("Email", QuestionTypeShortAnswerEmail::class)
                 ->addQuestion("Address", QuestionTypeLongAnswer::class)
                 ->addSection("Third section")
+                ->addQuestion("Date", QuestionTypeDateAndTimeDate::class)
+                ->addQuestion("Time", QuestionTypeDateAndTimeTime::class)
+                ->addQuestion("DateTime", QuestionTypeDateAndTimeDateTime::class)
         );
         $answers_set = $answers_handler->saveAnswers($form, [
             $this->getQuestionId($form, "Name") => "Pierre Paul Jacques",
             $this->getQuestionId($form, "Age") => 20,
             $this->getQuestionId($form, "Email") => "pierre@paul.jacques",
             $this->getQuestionId($form, "Address") => "France",
+            $this->getQuestionId($form, "Date") => "2021-01-01",
+            $this->getQuestionId($form, "Time") => "12:00",
+            $this->getQuestionId($form, "DateTime") => "2021-01-01 12:00:00",
         ], \Session::getLoginUserID());
 
         // Ensure we used every possible questions types

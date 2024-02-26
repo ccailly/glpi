@@ -110,6 +110,11 @@
                 ) }}
             </div>
 
+            {# Render the specific question options #}
+            <div data-glpi-form-editor-specific-question-options data-glpi-form-editor-question-extra-details>
+                {{ question_type.renderAdminstrationOptionsTemplate(question)|raw }}
+            </div>
+
             <div
                 class="d-flex align-items-center"
                 data-glpi-form-editor-question-extra-details
