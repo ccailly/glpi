@@ -115,6 +115,15 @@ class QuestionTypesManager extends DbTestCase
                 new \Glpi\Form\QuestionType\QuestionTypeLongAnswer(),
             ]
         ];
+
+        yield [
+            QuestionTypeCategory::DATE_AND_TIME,
+            [
+                new \Glpi\Form\QuestionType\QuestionTypeDateAndTimeDate(),
+                new \Glpi\Form\QuestionType\QuestionTypeDateAndTimeDateTime(),
+                new \Glpi\Form\QuestionType\QuestionTypeDateAndTimeTime(),
+            ]
+        ];
     }
 
     /**
