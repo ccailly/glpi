@@ -50,7 +50,7 @@ final class QuestionTypeLongAnswer implements QuestionTypeInterface
     }
 
     #[Override]
-    public function renderAdminstrationTemplate(?Question $question): string
+    public function renderAdministrationTemplate(?Question $question): string
     {
         $template = <<<TWIG
             {% import 'components/form/fields_macros.html.twig' as fields %}
@@ -80,7 +80,7 @@ TWIG;
     }
 
     #[Override]
-    public function renderAdminstrationOptionsTemplate(?Question $question): string
+    public function renderAdministrationOptionsTemplate(?Question $question): string
     {
         return '';
     }

@@ -95,7 +95,7 @@ abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
     }
 
     #[Override]
-    public function renderAdminstrationTemplate(
+    public function renderAdministrationTemplate(
         ?Question $question = null
     ): string {
         $template = <<<TWIG
@@ -124,7 +124,7 @@ TWIG;
     }
 
     #[Override]
-    public function renderAdminstrationOptionsTemplate(
+    public function renderAdministrationOptionsTemplate(
         ?Question $question = null
     ): string {
         $template = <<<TWIG

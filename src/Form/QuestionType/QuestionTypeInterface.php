@@ -52,7 +52,7 @@ interface QuestionTypeInterface
      *
      * @return string
      */
-    public function renderAdminstrationTemplate(?Question $question): string;
+    public function renderAdministrationTemplate(?Question $question): string;
 
     /**
      * Render the administration options template for the given question.
@@ -62,7 +62,7 @@ interface QuestionTypeInterface
      *
      * @return string
      */
-    public function renderAdminstrationOptionsTemplate(?Question $question): string;
+    public function renderAdministrationOptionsTemplate(?Question $question): string;
 
     /**
      * Render the end up user template for a given question.

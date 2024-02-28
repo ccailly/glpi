@@ -57,7 +57,7 @@ abstract class QuestionTypeShortAnswer implements QuestionTypeInterface
     abstract public function getInputType(): string;
 
     #[Override]
-    public function renderAdminstrationTemplate(
+    public function renderAdministrationTemplate(
         ?Question $question = null,
         ?string $input_prefix = null
     ): string {
@@ -80,7 +80,7 @@ TWIG;
     }
 
     #[Override]
-    public function renderAdminstrationOptionsTemplate(?Question $question): string
+    public function renderAdministrationOptionsTemplate(?Question $question): string
     {
         return '';
     }

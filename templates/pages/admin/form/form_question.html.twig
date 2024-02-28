@@ -84,7 +84,7 @@
 
             {# Render the specific question type #}
             <div data-glpi-form-editor-question-type-specific>
-                {{ question_type.renderAdminstrationTemplate(question)|raw }}
+                {{ question_type.renderAdministrationTemplate(question)|raw }}
             </div>
 
             {# Display common fields #}
@@ -112,8 +112,8 @@
             </div>
 
             {# Render the specific question options #}
-            <div data-glpi-form-editor-specific-question-options data-glpi-form-editor-question-extra-details>
-                {{ question_type.renderAdminstrationOptionsTemplate(question)|raw }}
+            <div class="mt-4" data-glpi-form-editor-specific-question-options data-glpi-form-editor-question-extra-details>
+                {{ question_type.renderAdministrationOptionsTemplate(question)|raw }}
             </div>
 
             <div

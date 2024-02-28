@@ -88,7 +88,7 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
     }
 
     #[Override]
-    public function renderAdminstrationTemplate(
+    public function renderAdministrationTemplate(
         ?Question $question = null
     ): string {
         $template = <<<TWIG
@@ -112,7 +112,7 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
                 }
             ) }}
 TWIG;
-        $template .= parent::renderAdminstrationTemplate($question);
+        $template .= parent::renderAdministrationTemplate($question);
 
         $twig = TemplateRenderer::getInstance();
         return $twig->renderFromStringTemplate($template, [
