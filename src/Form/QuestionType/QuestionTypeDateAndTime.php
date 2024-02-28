@@ -116,6 +116,27 @@ abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
 
                     // Save the flatpickr config in a global variable
                     window.flatpickr_configs['#default-value_{{ rand }}'] = $('#default-value_{{ rand }}').get(0)._flatpickr.config;
+
+                    // Register a listener to reinit the flatpickr instance when the question type is changed
+                    if (window.is_flatpickr_question_type_changed_listener_registered === undefined) {
+                        window.is_flatpickr_question_type_changed_listener_registered = true;
+
+                        $(document).on('glpi-form-editor-question-type-changed', function(event, question, type) {
+                            Object.entries(window.flatpickr_configs).forEach(([id, config]) => {
+                                // Check if the id is in the question and if it's visible
+                                if (
+                                    question.find(id).length > 0
+                                    && question.find(id).is(":visible")
+                                ) {
+                                    // Remove the last input
+                                    $(id).find('input').last().remove();
+
+                                    // Reinit the flatpickr instance
+                                    $(id).flatpickr(config);
+                                }
+                            });
+                        });
+                    }
                 });
             </script>
 TWIG;

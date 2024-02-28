@@ -881,19 +881,7 @@ class GlpiFormEditorController
             extra_data,
         );
 
-        Object.entries(window.flatpickr_configs).forEach(([id, config]) => {
-            // Check if the id is in the question and if it's visible
-            if (
-                question.find(`${id}`).length > 0
-                && question.find(`${id}`).is(":visible")
-            ) {
-                // Remove the last input
-                $(`${id}`).find('input').last().remove();
-
-                // Reinit the flatpickr instance
-                $(`${id}`).flatpickr(config);
-            }
-        });
+        $(document).trigger('glpi-form-editor-question-type-changed', [question, type]);
     }
 
     /**
