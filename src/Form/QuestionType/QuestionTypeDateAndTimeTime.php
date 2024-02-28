@@ -67,6 +67,12 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
     }
 
     #[Override]
+    public function getCurrentTimePlaceholder(): string
+    {
+        return __('Current time');
+    }
+
+    #[Override]
     public function getDefaultValue(?Question $question): string
     {
         $value = '';
@@ -95,10 +101,14 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
                 value,
                 "",
                 {
-                    'full_width'   : true,
-                    'no_label'     : true,
-                    'rand'         : rand,
-                    'disabled'     : is_default_value_current_time,
+                    'full_width'            : true,
+                    'no_label'              : true,
+                    'rand'                  : rand,
+                    'disabled'              : is_default_value_current_time,
+                    'mb'                    : 'mb-2',
+                    'additional_attributes' : {
+                        'placeholder'       : 'Time',
+                    }
                 }
             ) }}
 TWIG;

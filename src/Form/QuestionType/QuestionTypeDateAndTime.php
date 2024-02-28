@@ -40,7 +40,7 @@ use Glpi\Form\Question;
 use Override;
 
 /**
- * Short answers are single line inputs used to answer simple questions.
+ * "Date and time" questions represent date picker inputs.
  */
 abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
 {
@@ -63,6 +63,14 @@ abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
      * @return string
      */
     abstract public function getCurrentTimeOptionLabel(): string;
+
+    /**
+     * Get the placeholder used in the date picker
+     * when the current time option is selected
+     *
+     * @return string
+     */
+    abstract public function getCurrentTimePlaceholder(): string;
 
     /**
      * Get the default value for the question type
@@ -122,7 +130,7 @@ TWIG;
         $template = <<<TWIG
         {% set rand = random() %}
 
-        <label class="form-check">
+        <label class="form-check mb-1">
             {# We use a hidden input to send the value when the checkbox is unchecked #}
             <input type="hidden" name="is_default_value_current_time" value="0">
             <input id="is_default_value_current_time_{{ rand }}" class="form-check-input" type="checkbox"
@@ -135,7 +143,28 @@ TWIG;
             {# Disabled the default value input if the checkbox is checked #}
             function handleDefaultValueCurrentTimeCheckbox_{{ rand }}(input) {
                 const isChecked = $(input).is(':checked');
-                $(input).parent().parent().parent().find('div .flatpickr').find('input[type="text"]').prop('disabled', isChecked);
+                const dateInput = $(input).parent().parent().parent().find('div .flatpickr').find('input[type="text"]');
+
+                dateInput.prop('disabled', isChecked);
+
+                {# Check if the default palceholder is saved in a data attribute #}
+                if (isChecked && dateInput.data('default-placeholder') === undefined) {
+                    dateInput.data('default-placeholder', dateInput.attr('placeholder'));
+                }
+
+                {# Change the placeholder if the checkbox is checked #}
+                if (isChecked) {
+                    dateInput.attr('placeholder', '{{ default_current_time_placeholder }}');
+
+                    {# Save the input value in a data attribute and clear the input #}
+                    dateInput.data('default-value', dateInput.val());
+                    dateInput.val('');
+                } else {
+                    dateInput.attr('placeholder', dateInput.data('default-placeholder'));
+
+                    {# Restore the input value from the data attribute #}
+                    dateInput.val(dateInput.data('default-value'));
+                }
             }
         </script>
 TWIG;
@@ -145,6 +174,7 @@ TWIG;
             'question' => $question,
             'is_default_value_current_time' => $this->isDefaultValueCurrentTime($question),
             'is_default_value_current_time_label' => $this->getCurrentTimeOptionLabel(),
+            'default_current_time_placeholder' => $this->getCurrentTimePlaceholder(),
         ]);
     }
 

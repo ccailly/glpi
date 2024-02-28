@@ -341,7 +341,7 @@ class GlpiFormEditorController
      */
     #formatInputsNames(item, type, item_index) {
         // Find all inputs for this section
-        const inputs = item.find("input, select, textarea");
+        const inputs = item.find("input[name], select[name], textarea[name]");
 
         // Find all section inputs and update their names to match the
         // "_section[section_index][field]" format
