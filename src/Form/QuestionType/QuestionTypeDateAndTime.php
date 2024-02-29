@@ -58,6 +58,11 @@ abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
     abstract public function formatAnswer($answer): string;
 
     /**
+     * Get the placeholder for the date/time/date and time picker
+     */
+    abstract public function getPlaceholder(): string;
+
+    /**
      * Get the label for the current time option
      *
      * @return string
@@ -98,30 +103,33 @@ abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
     public function renderAdministrationTemplate(
         ?Question $question = null
     ): string {
-        $template = <<<TWIG
-            <script>
-                $(document).ready(function() {
-                    // Check if the global variable exists
-                    if (typeof window.flatpickr_configs === 'undefined') {
-                        window.flatpickr_configs = {};
-                    }
+        $js_save_flatpickr_configs = <<<TWIG
+            // Check if the global variable exists
+            if (typeof window.flatpickr_configs === 'undefined') {
+                window.flatpickr_configs = {};
+            }
 
-                    // Check if the flatpickr instance exists
-                    if (
-                        $('#default-value_{{ rand }}').get(0) === undefined
-                        || $('#default-value_{{ rand }}').get(0)._flatpickr === undefined
-                    ) {
-                        return;
-                    }
+            // Check if the flatpickr instance exists
+            if (
+                $('#default-value_{{ rand }}').get(0) === undefined
+                || $('#default-value_{{ rand }}').get(0)._flatpickr === undefined
+            ) {
+                return;
+            }
 
-                    // Save the flatpickr config in a global variable
-                    window.flatpickr_configs['#default-value_{{ rand }}'] = $('#default-value_{{ rand }}').get(0)._flatpickr.config;
+            // Save the flatpickr config in a global variable
+            window.flatpickr_configs['#default-value_{{ rand }}'] = $('#default-value_{{ rand }}').get(0)._flatpickr.config;
+TWIG;
 
-                    // Register a listener to reinit the flatpickr instance when the question type is changed
-                    if (window.is_flatpickr_question_type_changed_listener_registered === undefined) {
-                        window.is_flatpickr_question_type_changed_listener_registered = true;
+        $js_flatpickr_init = "";
+        if ($question == null) {
+            $js_flatpickr_init = <<<TWIG
+                // Register a listener to reinit the flatpickr instance when the question type is changed
+                if (window.is_flatpickr_question_type_changed_listener_registered === undefined) {
+                    window.is_flatpickr_question_type_changed_listener_registered = true;
 
-                        $(document).on('glpi-form-editor-question-type-changed', function(event, question, type) {
+                    $(document).on('glpi-form-editor-question-type-changed', function(event, question, type) {
+                        if (type.startsWith('Glpi\\\\Form\\\\QuestionType\\\\QuestionTypeDateAndTime')) {
                             Object.entries(window.flatpickr_configs).forEach(([id, config]) => {
                                 // Check if the id is in the question and if it's visible
                                 if (
@@ -135,13 +143,13 @@ abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
                                     $(id).flatpickr(config);
                                 }
                             });
-                        });
-                    }
-                });
-            </script>
+                        }
+                    });
+                }
 TWIG;
+        }
 
-        return $template;
+        return "<script> $(function() { " . $js_save_flatpickr_configs . $js_flatpickr_init . " }); </script>";
     }
 
     #[Override]

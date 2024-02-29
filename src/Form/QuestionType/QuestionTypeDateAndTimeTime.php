@@ -61,6 +61,12 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
     }
 
     #[Override]
+    public function getPlaceholder(): string
+    {
+        return __('Time');
+    }
+
+    #[Override]
     public function getCurrentTimeOptionLabel(): string
     {
         return __('Use current time as default value');
@@ -107,7 +113,7 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
                     'disabled'              : is_default_value_current_time,
                     'mb'                    : 'mb-2',
                     'additional_attributes' : {
-                        'placeholder'       : 'Time',
+                        'placeholder'       : placeholder,
                     }
                 }
             ) }}
@@ -119,6 +125,7 @@ TWIG;
             'question'          => $question,
             'value'             => $this->getDefaultValue($question),
             'is_default_value_current_time' => $this->isDefaultValueCurrentTime($question),
+            'placeholder'       => $this->getPlaceholder(),
         ]);
     }
 
