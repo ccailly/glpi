@@ -63,7 +63,7 @@ final class QuestionTypeDateAndTimeTime extends QuestionTypeDateAndTime
     #[Override]
     public function getPlaceholder(): string
     {
-        return __('Time');
+        return _n('Time', 'Times', 1);
     }
 
     #[Override]
