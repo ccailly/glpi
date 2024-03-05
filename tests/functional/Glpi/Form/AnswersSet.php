@@ -39,14 +39,14 @@ use CommonGLPI;
 use Computer;
 use DbTestCase;
 use Glpi\Form\AnswersHandler\AnswersHandler;
-use Glpi\Form\QuestionType\QuestionTypeDateAndTimeDate;
-use Glpi\Form\QuestionType\QuestionTypeDateAndTimeDateTime;
-use Glpi\Form\QuestionType\QuestionTypeDateAndTimeTime;
-use Glpi\Form\QuestionType\QuestionTypeLongAnswer;
-use Glpi\Form\QuestionType\QuestionTypeShortAnswerEmail;
-use Glpi\Form\QuestionType\QuestionTypeShortAnswerNumber;
-use Glpi\Form\QuestionType\QuestionTypeShortAnswerText;
+use Glpi\Form\QuestionType\QuestionTypeDate;
+use Glpi\Form\QuestionType\QuestionTypeDateTime;
+use Glpi\Form\QuestionType\QuestionTypeEmail;
+use Glpi\Form\QuestionType\QuestionTypeLongText;
+use Glpi\Form\QuestionType\QuestionTypeNumber;
+use Glpi\Form\QuestionType\QuestionTypeShortText;
 use Glpi\Form\QuestionType\QuestionTypesManager;
+use Glpi\Form\QuestionType\QuestionTypeTime;
 use Glpi\Tests\FormBuilder;
 use Impact;
 use Ticket;
@@ -75,7 +75,7 @@ class AnswersSet extends DbTestCase
         // Form with answers
         $form_2 = $this->createForm(
             (new FormBuilder())
-                ->addQuestion("Name", QuestionTypeShortAnswerText::class)
+                ->addQuestion("Name", QuestionTypeShortText::class)
         );
 
         $answers_handler->saveAnswers($form_2, [
@@ -141,7 +141,7 @@ class AnswersSet extends DbTestCase
         // Form using all possible questions types
         $form_2 = $this->createForm(
             (new FormBuilder())
-                ->addQuestion("Name", QuestionTypeShortAnswerText::class)
+                ->addQuestion("Name", QuestionTypeShortText::class)
         );
 
         $answers_handler->saveAnswers($form_2, [
@@ -201,7 +201,7 @@ class AnswersSet extends DbTestCase
         // Create form and insert an anwser
         $form = $this->createForm(
             (new FormBuilder())
-                ->addQuestion("Name", QuestionTypeShortAnswerText::class)
+                ->addQuestion("Name", QuestionTypeShortText::class)
         );
         $answers_set = $answers_handler->saveAnswers($form, [
             $this->getQuestionId($form, "Name") => "Pierre Paul Jacques"
@@ -231,15 +231,15 @@ class AnswersSet extends DbTestCase
         // Create a form with each possible types of questions and multiple sections
         $form = $this->createForm(
             (new FormBuilder())
-                ->addQuestion("Name", QuestionTypeShortAnswerText::class)
-                ->addQuestion("Age", QuestionTypeShortAnswerNumber::class)
+                ->addQuestion("Name", QuestionTypeShortText::class)
+                ->addQuestion("Age", QuestionTypeNumber::class)
                 ->addSection("Second section")
-                ->addQuestion("Email", QuestionTypeShortAnswerEmail::class)
-                ->addQuestion("Address", QuestionTypeLongAnswer::class)
+                ->addQuestion("Email", QuestionTypeEmail::class)
+                ->addQuestion("Address", QuestionTypeLongText::class)
                 ->addSection("Third section")
-                ->addQuestion("Date", QuestionTypeDateAndTimeDate::class)
-                ->addQuestion("Time", QuestionTypeDateAndTimeTime::class)
-                ->addQuestion("DateTime", QuestionTypeDateAndTimeDateTime::class)
+                ->addQuestion("Date", QuestionTypeDate::class)
+                ->addQuestion("Time", QuestionTypeTime::class)
+                ->addQuestion("DateTime", QuestionTypeDateTime::class)
         );
         $answers_set = $answers_handler->saveAnswers($form, [
             $this->getQuestionId($form, "Name") => "Pierre Paul Jacques",

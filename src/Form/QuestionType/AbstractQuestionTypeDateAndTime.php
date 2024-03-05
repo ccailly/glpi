@@ -42,7 +42,7 @@ use Override;
 /**
  * "Date and time" questions represent date picker inputs.
  */
-abstract class QuestionTypeDateAndTime implements QuestionTypeInterface
+abstract class AbstractQuestionTypeDateAndTime implements QuestionTypeInterface
 {
     #[Override]
     public function __construct()

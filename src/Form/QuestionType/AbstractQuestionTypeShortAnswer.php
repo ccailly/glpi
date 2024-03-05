@@ -40,42 +40,42 @@ use Glpi\Form\Question;
 use Override;
 
 /**
- * Long answers are multiple lines inputs used to answer questions with as much details as needed.
+ * Short answers are single line inputs used to answer simple questions.
  */
-final class QuestionTypeLongAnswer implements QuestionTypeInterface
+abstract class AbstractQuestionTypeShortAnswer implements QuestionTypeInterface
 {
     #[Override]
     public function __construct()
     {
     }
 
-    #[Override]
-    public function renderAdministrationTemplate(?Question $question): string
-    {
-        $template = <<<TWIG
-            {% import 'components/form/fields_macros.html.twig' as fields %}
+    /**
+     * Specific input type for child classes
+     *
+     * @return string
+     */
+    abstract public function getInputType(): string;
 
-            {{ fields.textareaField(
-                'default_value',
-                question is not null ? question.fields.default_value : '',
-                "",
-                {
-                    'placeholder': placeholder,
-                    'enable_richtext': true,
-                    'editor_height': "0",
-                    'rows' : 1,
-                    'init': question is not null ? true : false,
-                    'is_horizontal': false,
-                    'full_width'   : true,
-                    'no_label'     : true,
-                }
-            ) }}
+    #[Override]
+    public function renderAdministrationTemplate(
+        ?Question $question = null,
+        ?string $input_prefix = null
+    ): string {
+        $template = <<<TWIG
+            <input
+                class="form-control mb-2"
+                type="{{ input_type|e('html_attr') }}"
+                name="default_value"
+                placeholder="{{ input_placeholder|e('html_attr') }}"
+                value="{{ question is not null ? question.fields.default_value|e('html_attr') : '' }}"
+            />
 TWIG;
 
         $twig = TemplateRenderer::getInstance();
         return $twig->renderFromStringTemplate($template, [
-            'question'    => $question,
-            'placeholder' => __('Long text'),
+            'question'          => $question,
+            'input_type'        => $this->getInputType(),
+            'input_placeholder' => $this->getName(),
         ]);
     }
 
@@ -86,31 +86,23 @@ TWIG;
     }
 
     #[Override]
-    public function renderEndUserTemplate(Question $question): string
-    {
-        // TODO: handle required
+    public function renderEndUserTemplate(
+        Question $question,
+    ): string {
         $template = <<<TWIG
-            {% import 'components/form/fields_macros.html.twig' as fields %}
-
-            {{ fields.textareaField(
-                "answers[" ~ question.fields.id ~ "]",
-                question.fields.default_value,
-                "",
-                {
-                    'enable_richtext': true,
-                    'editor_height': "0",
-                    'rows' : 1,
-                    'init': question is not null ? true : false,
-                    'is_horizontal': false,
-                    'full_width'   : true,
-                    'no_label'     : true,
-                }
-            ) }}
+            <input
+                type="{{ input_type|e('html_attr') }}"
+                class="form-control"
+                name="answers[{{ question.fields.id|e('html_attr') }}]"
+                value="{{ question.fields.default_value|e('html_attr') }}"
+                {{ question.fields.is_mandatory ? 'required' : '' }}
+            >
 TWIG;
 
         $twig = TemplateRenderer::getInstance();
         return $twig->renderFromStringTemplate($template, [
-            'question' => $question,
+            'question'   => $question,
+            'input_type' => $this->getInputType(),
         ]);
     }
 
@@ -118,7 +110,7 @@ TWIG;
     public function renderAnswerTemplate($answer): string
     {
         $template = <<<TWIG
-            <div class="form-control-plaintext">{{ answer|safe_html }}</div>
+            <div class="form-control-plaintext">{{ answer }}</div>
 TWIG;
 
         $twig = TemplateRenderer::getInstance();
@@ -128,20 +120,8 @@ TWIG;
     }
 
     #[Override]
-    public function getName(): string
-    {
-        return __("Long answer");
-    }
-
-    #[Override]
     public function getCategory(): QuestionTypeCategory
     {
-        return QuestionTypeCategory::LONG_ANSWER;
-    }
-
-    #[Override]
-    public function getWeight(): int
-    {
-        return 10;
+        return QuestionTypeCategory::SHORT_ANSWER;
     }
 }

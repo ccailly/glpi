@@ -40,7 +40,7 @@ use Glpi\Application\View\TemplateRenderer;
 use Glpi\Form\Question;
 use Override;
 
-final class QuestionTypeDateAndTimeDateTime extends QuestionTypeDateAndTime
+final class QuestionTypeDateTime extends AbstractQuestionTypeDateAndTime
 {
     #[Override]
     public function getName(): string

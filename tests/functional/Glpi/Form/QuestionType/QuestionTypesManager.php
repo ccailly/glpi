@@ -38,9 +38,6 @@ namespace tests\units\Glpi\Form\QuestionType;
 use DbTestCase;
 use Glpi\Form\QuestionType\QuestionTypeInterface;
 use Glpi\Form\QuestionType\QuestionTypeCategory;
-use Glpi\Form\QuestionType\QuestionTypeShortAnswerEmail;
-use Glpi\Form\QuestionType\QuestionTypeShortAnswerNumber;
-use Glpi\Form\QuestionType\QuestionTypeShortAnswerText;
 
 class QuestionTypesManager extends DbTestCase
 {
@@ -103,25 +100,25 @@ class QuestionTypesManager extends DbTestCase
         yield [
             QuestionTypeCategory::SHORT_ANSWER,
             [
-                new QuestionTypeShortAnswerText(),
-                new QuestionTypeShortAnswerEmail(),
-                new QuestionTypeShortAnswerNumber(),
+                new \Glpi\Form\QuestionType\QuestionTypeShortText(),
+                new \Glpi\Form\QuestionType\QuestionTypeEmail(),
+                new \Glpi\Form\QuestionType\QuestionTypeNumber(),
             ]
         ];
 
         yield [
             QuestionTypeCategory::LONG_ANSWER,
             [
-                new \Glpi\Form\QuestionType\QuestionTypeLongAnswer(),
+                new \Glpi\Form\QuestionType\QuestionTypeLongText(),
             ]
         ];
 
         yield [
             QuestionTypeCategory::DATE_AND_TIME,
             [
-                new \Glpi\Form\QuestionType\QuestionTypeDateAndTimeDate(),
-                new \Glpi\Form\QuestionType\QuestionTypeDateAndTimeDateTime(),
-                new \Glpi\Form\QuestionType\QuestionTypeDateAndTimeTime(),
+                new \Glpi\Form\QuestionType\QuestionTypeDate(),
+                new \Glpi\Form\QuestionType\QuestionTypeDateTime(),
+                new \Glpi\Form\QuestionType\QuestionTypeTime(),
             ]
         ];
     }

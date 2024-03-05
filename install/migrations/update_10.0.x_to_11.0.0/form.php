@@ -184,10 +184,10 @@ if (GLPI_VERSION == "10.1.0-dev") {
             'FROM' => 'glpi_forms_questions',
         ]);
         foreach ($questions as $question) {
-            if ($question['type'] == "Glpi\Form\QuestionType\QuestionTypeShortAnswer") {
+            if ($question['type'] == "Glpi\Form\QuestionType\AbstractQuestionTypeShortAnswer") {
                 // Default subtype for short answers
-                $new_type = "Glpi\Form\QuestionType\QuestionTypeShortAnswerText";
-            } elseif ($question['type'] == "Glpi\Form\QuestionType\QuestionTypeLongAnswer") {
+                $new_type = "Glpi\Form\QuestionType\QuestionTypeShortText";
+            } elseif ($question['type'] == "Glpi\Form\QuestionType\QuestionTypeLongText") {
                 // Long answers have no sub types, use parent
                 $new_type = $question['type'];
             } else {
