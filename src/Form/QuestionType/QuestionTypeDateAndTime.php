@@ -176,7 +176,7 @@ TWIG;
 
                 dateInput.prop('disabled', isChecked);
 
-                {# Check if the default palceholder is saved in a data attribute #}
+                {# Check if the default placeholder is saved in a data attribute #}
                 if (isChecked && dateInput.data('default-placeholder') === undefined) {
                     dateInput.data('default-placeholder', dateInput.attr('placeholder'));
                 }
