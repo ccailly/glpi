@@ -305,6 +305,28 @@ class Central extends CommonGLPI
                 ]
             ];
         }
+        $idor = Session::getNewIDORToken(Project::class);
+        if (Session::haveRight("project", Project::READMY)) {
+            $twig_params['cards'][] = [
+                'itemtype'  => Project::class,
+                'widget'    => 'central_list',
+                'params'    => $card_params + [
+                    'itemtype'      => \User::getType(),
+                    '_idor_token'  => $idor
+                ]
+            ];
+        }
+        $idor = Session::getNewIDORToken(ProjectTask::class);
+        if (Session::haveRight("projecttask", ProjectTask::READMY)) {
+            $twig_params['cards'][] = [
+                'itemtype'  => ProjectTask::class,
+                'widget'    => 'central_list',
+                'params'    => $card_params + [
+                    'itemtype'      => \User::getType(),
+                    '_idor_token'  => $idor
+                ]
+            ];
+        }
 
         TemplateRenderer::getInstance()->display('central/widget_tab.html.twig', $twig_params);
     }
@@ -440,6 +462,35 @@ class Central extends CommonGLPI
                 ]
             ];
         }
+
+        $card_params = [
+            'itemtype' => \Group::getType(),
+            'who' => array_map(
+                fn($group) => $group['id'],
+                \Group_User::getUserGroups(Session::getLoginUserID())
+            )
+        ];
+        $idor = Session::getNewIDORToken(Project::class);
+        if (Session::haveRight("project", Project::READMY)) {
+            $twig_params['cards'][] = [
+                'itemtype'  => Project::class,
+                'widget'    => 'central_list',
+                'params'    => $card_params + [
+                    '_idor_token'  => $idor
+                ]
+            ];
+        }
+        $idor = Session::getNewIDORToken(ProjectTask::class);
+        if (Session::haveRight("projecttask", ProjectTask::READMY)) {
+            $twig_params['cards'][] = [
+                'itemtype'  => ProjectTask::class,
+                'widget'    => 'central_list',
+                'params'    => $card_params + [
+                    '_idor_token'  => $idor
+                ]
+            ];
+        }
+
         TemplateRenderer::getInstance()->display('central/widget_tab.html.twig', $twig_params);
     }
 
