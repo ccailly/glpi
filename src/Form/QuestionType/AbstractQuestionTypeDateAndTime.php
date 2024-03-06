@@ -129,7 +129,11 @@ TWIG;
                     window.is_flatpickr_question_type_changed_listener_registered = true;
 
                     $(document).on('glpi-form-editor-question-type-changed', function(event, question, type) {
-                        if (type.startsWith('Glpi\\\\Form\\\\QuestionType\\\\QuestionTypeDateAndTime')) {
+                        if (
+                            type.startsWith('Glpi\\\\Form\\\\QuestionType\\\\QuestionTypeDate')
+                            || type.startsWith('Glpi\\\\Form\\\\QuestionType\\\\QuestionTypeDateTime')
+                            || type.startsWith('Glpi\\\\Form\\\\QuestionType\\\\QuestionTypeTime')
+                        ) {
                             Object.entries(window.flatpickr_configs).forEach(([id, config]) => {
                                 // Check if the id is in the question and if it's visible
                                 if (
