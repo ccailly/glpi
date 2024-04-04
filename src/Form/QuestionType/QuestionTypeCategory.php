@@ -66,6 +66,16 @@ enum QuestionTypeCategory: string
     case URGENCY = "urgency";
 
     /**
+     * Question that expect a single choice among a list of options
+     */
+    case RADIO = "radio";
+
+    /**
+     * Question that expect multiple choices among a list of options
+     */
+    case CHECKBOX = "checkbox";
+
+    /**
      * Get category label
      * @return string
      */
@@ -77,6 +87,8 @@ enum QuestionTypeCategory: string
             self::DATE_AND_TIME => __("Date and time"),
             self::ACTORS => __("Actors"),
             self::URGENCY => __("Urgency"),
+            self::RADIO => __("Radio"),
+            self::CHECKBOX => __("Checkbox"),
         };
     }
 }

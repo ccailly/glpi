@@ -50,13 +50,19 @@ final class QuestionTypeLongText implements QuestionTypeInterface
     }
 
     #[Override]
+    public static function loadJavascriptFiles(): array
+    {
+        return [];
+    }
+
+    #[Override]
     public static function formatDefaultValueForDB(mixed $value): ?string
     {
         return $value;
     }
 
     #[Override]
-    public static function validateExtraDataInput(array $input): bool
+    public static function validateExtraDataInput(array &$input): bool
     {
         return empty($input); // No extra data for this question type
     }

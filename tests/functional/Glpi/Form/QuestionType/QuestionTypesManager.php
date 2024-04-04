@@ -82,6 +82,8 @@ class QuestionTypesManager extends DbTestCase
             QuestionTypeCategory::DATE_AND_TIME,
             QuestionTypeCategory::ACTORS,
             QuestionTypeCategory::URGENCY,
+            QuestionTypeCategory::RADIO,
+            QuestionTypeCategory::CHECKBOX,
         ];
 
         // Manual array comparison, `isEqualTo`  doesn't seem to work properly
@@ -135,6 +137,20 @@ class QuestionTypesManager extends DbTestCase
             QuestionTypeCategory::URGENCY,
             [
                 new \Glpi\Form\QuestionType\QuestionTypeUrgency(),
+            ]
+        ];
+
+        yield [
+            QuestionTypeCategory::RADIO,
+            [
+                new \Glpi\Form\QuestionType\QuestionTypeRadio(),
+            ]
+        ];
+
+        yield [
+            QuestionTypeCategory::CHECKBOX,
+            [
+                new \Glpi\Form\QuestionType\QuestionTypeCheckbox(),
             ]
         ];
     }

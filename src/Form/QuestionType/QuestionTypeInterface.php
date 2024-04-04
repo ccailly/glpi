@@ -45,6 +45,14 @@ interface QuestionTypeInterface
     public function __construct();
 
     /**
+     * Load the required JS files for this question type.
+     * This method is called when the form editor page is loaded.
+     *
+     * @return array List of JS files to load.
+     */
+    public static function loadJavascriptFiles(): array;
+
+    /**
      * Format the default value for the database.
      * This method is called before saving the question.
      *
@@ -61,7 +69,7 @@ interface QuestionTypeInterface
      *
      * @return bool
      */
-    public static function validateExtraDataInput(array $input): bool;
+    public static function validateExtraDataInput(array &$input): bool;
 
     /**
      * Render the administration template for the given question.

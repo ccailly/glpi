@@ -51,6 +51,12 @@ class QuestionTypeDateTime implements QuestionTypeInterface
     }
 
     #[Override]
+    public static function loadJavascriptFiles(): array
+    {
+        return [];
+    }
+
+    #[Override]
     public static function formatDefaultValueForDB(mixed $value): ?string
     {
         return $value;
@@ -175,7 +181,7 @@ class QuestionTypeDateTime implements QuestionTypeInterface
     }
 
     #[Override]
-    public static function validateExtraDataInput(array $input): bool
+    public static function validateExtraDataInput(array &$input): bool
     {
         $allowed_keys = [
             'is_default_value_current_time',

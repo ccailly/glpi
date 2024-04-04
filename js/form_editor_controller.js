@@ -136,9 +136,12 @@ class GlpiFormEditorController
         $(document)
             .on(
                 'click',
-                () => {
+                event => {
+                    if (event.isDefaultPrevented)
+                        return;
+
                     this.#setActiveItem(null);
-                    $('.simulate-focus').removeClass('simulate-focus');
+                    $('.simulate-focus').removeClass('simulate-focus');;
                 }
             );
 
@@ -159,7 +162,7 @@ class GlpiFormEditorController
         // Compute state before submitting the form
         $(this.#target).on('submit', (event) => {
             try {
-                this.#computeState();
+                this.computeState();
             } catch (e) {
                 // Do not submit the form if the state isn't computed
                 event.preventDefault();
@@ -359,7 +362,7 @@ class GlpiFormEditorController
      * Compute the state of the form editor (= inputs names and values).
      * Must be executed after each actions.
      */
-    #computeState() {
+    computeState() {
         let global_q_index = 0;
 
         // Find all sections
@@ -404,7 +407,7 @@ class GlpiFormEditorController
     }
 
     /**
-     * Must not be called directly, use #computeState() instead.
+     * Must not be called directly, use computeState() instead.
      *
      * Inputs names of questions and sections must be formatted to match the
      * expected format, which is:
@@ -451,9 +454,9 @@ class GlpiFormEditorController
 
             // Update input name
             let postfix = "";
-            if (field.endsWith("[]")) {
-                field = field.slice(0, -2);
-                postfix = "[]";
+            if (typeof field === 'string' && field.match(/\[([\w[\]]*)\]$/g)) {
+                postfix = field.match(/\[([\w[\]]*)\]$/g);
+                field = field.replace(postfix, "");
             }
 
             $(input).attr(
@@ -464,7 +467,7 @@ class GlpiFormEditorController
     }
 
     /**
-     * Must not be called directly, use #computeState() instead.
+     * Must not be called directly, use computeState() instead.
      *
      * Set the rank of the given item
      *
@@ -476,7 +479,7 @@ class GlpiFormEditorController
     }
 
     /**
-     * Must not be called directly, use #computeState() instead.
+     * Must not be called directly, use computeState() instead.
      *
      * Generate a UUID for each newly created questions and sections.
      * This UUID will be used by the backend to handle updates for news items.
@@ -494,7 +497,7 @@ class GlpiFormEditorController
     }
 
     /**
-     * Must not be called directly, use #computeState() instead.
+     * Must not be called directly, use computeState() instead.
      *
      * Set the parent section of the given question.
      *
