@@ -43,10 +43,12 @@ use Glpi\Form\QuestionType\QuestionTypeAssignee;
 use Glpi\Form\QuestionType\QuestionTypeObserver;
 use Glpi\Form\QuestionType\QuestionTypeRequester;
 use Glpi\Form\Destination\FormDestinationTicket;
+use Glpi\Form\QuestionType\QuestionTypeCheckbox;
 use Glpi\Form\QuestionType\QuestionTypeDateTime;
 use Glpi\Form\QuestionType\QuestionTypeEmail;
 use Glpi\Form\QuestionType\QuestionTypeLongText;
 use Glpi\Form\QuestionType\QuestionTypeNumber;
+use Glpi\Form\QuestionType\QuestionTypeRadio;
 use Glpi\Form\QuestionType\QuestionTypeShortText;
 use Glpi\Form\QuestionType\QuestionTypesManager;
 use Glpi\Form\QuestionType\QuestionTypeTime;
@@ -257,6 +259,16 @@ class AnswersSet extends DbTestCase
                 ->addQuestion("Observer", QuestionTypeObserver::class)
                 ->addQuestion("Assignee", QuestionTypeAssignee::class)
                 ->addQuestion("Urgency", QuestionTypeUrgency::class)
+                ->addQuestion("Radio", QuestionTypeRadio::class, '123', json_encode([
+                    'options' => [
+                        123 => 'Radio 1'
+                    ]
+                ]))
+                ->addQuestion("Checkbox", QuestionTypeCheckbox::class, '123', json_encode([
+                    'options' => [
+                        123 => 'Checkbox 1'
+                    ]
+                ]))
         );
         $answers_set = $answers_handler->saveAnswers($form, [
             $this->getQuestionId($form, "Name") => "Pierre Paul Jacques",
@@ -279,7 +291,9 @@ class AnswersSet extends DbTestCase
                 Group::getForeignKeyField() . '-1',
                 Supplier::getForeignKeyField() . '-1'
             ],
-            $this->getQuestionId($form, "Urgency") => 2
+            $this->getQuestionId($form, "Urgency") => 2,
+            $this->getQuestionId($form, "Radio") => 'Radio 1',
+            $this->getQuestionId($form, "Checkbox") => 'Checkbox 1'
         ], \Session::getLoginUserID());
 
         // Ensure we used every possible questions types
