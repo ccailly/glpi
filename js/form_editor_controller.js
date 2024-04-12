@@ -141,7 +141,7 @@ class GlpiFormEditorController
                         return;
 
                     this.#setActiveItem(null);
-                    $('.simulate-focus').removeClass('simulate-focus');;
+                    $('.simulate-focus').removeClass('simulate-focus');
                 }
             );
 
