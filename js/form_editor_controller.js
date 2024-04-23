@@ -136,7 +136,7 @@ class GlpiFormEditorController
         $(document)
             .on(
                 'click',
-                event => {
+                () => {
                     this.#setActiveItem(null);
                     $('.simulate-focus').removeClass('simulate-focus');
                 }

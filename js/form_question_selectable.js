@@ -31,7 +31,7 @@
  * ---------------------------------------------------------------------
  */
 
-/* global sortable */
+/* global sortable, getUUID */
 
 class GlpiFormQuestionTypeSelectable {
 
