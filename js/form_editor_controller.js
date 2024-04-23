@@ -137,9 +137,6 @@ class GlpiFormEditorController
             .on(
                 'click',
                 event => {
-                    if (event.isDefaultPrevented)
-                        return;
-
                     this.#setActiveItem(null);
                     $('.simulate-focus').removeClass('simulate-focus');
                 }

@@ -76,21 +76,31 @@ class GlpiFormQuestionTypeSelectable {
                     .find('input[type="radio"][checked]')
                     .prop('checked', true);
             }
+
+            this.#enableOptionsSortable();
         }
     }
 
+    /**
+     * Register listeners for the option elements.
+     *
+     * @param {JQuery<HTMLElement>} option
+     */
     #registerOptionListeners(option) {
         option
             .find('input[type="text"]')
-            .on('input', (event) => this.handleOptionChange(event))
-            .on('keydown', (event) => this.handleKeydown(event));
+            .on('input', (event) => this.#handleOptionChange(event))
+            .on('keydown', (event) => this.#handleKeydown(event));
 
         option
             .find('i[data-glpi-form-editor-question-option-remove]')
-            .on('click', (event) => this.removeOption(event));
+            .on('click', (event) => this.#removeOption(event));
     }
 
-    enableOptionsSortable() {
+    /**
+     * Enable sortable functionality for the options container.
+     */
+    #enableOptionsSortable() {
         sortable(this.#container, {
             // Drag and drop handle selector
             handle: '[data-glpi-form-editor-question-option-handle]',
@@ -103,86 +113,195 @@ class GlpiFormQuestionTypeSelectable {
         });
     }
 
-    removeOption(event) {
-        event.target.closest('div').remove();
-        event.preventDefault();
+    /**
+     * Add a new option after the specified input element.
+     *
+     * @param {HTMLElement} input - The input element after which to add the new option.
+     * @param {boolean} focus - Whether to focus the new option.
+     * @param {boolean} grab_visibility - Whether to show the grab handle for the new option.
+     */
+    #addOption(input, focus = false, grab_visibility = false) {
+        const template = this.#container.parent().find('template').get(0);
+        const clone = template.content.cloneNode(true);
+
+        $(input).parent().after(clone);
+
+        // Register the new option listeners
+        this.#registerOptionListeners($(input).parent().next());
+
+        if (focus) {
+            $(input).parent().next().find('input[type="text"]').trigger('focus');
+        }
+
+        if (grab_visibility) {
+            $(input).parent().next().find('i').removeClass('d-none');
+            $(input).parent().next().find('i[data-glpi-form-editor-question-option-handle]').css('visibility', 'visible');
+        }
     }
 
-    handleOptionChange(event) {
+    /**
+     * Remove the specified option.
+     *
+     * @param {Event} event - The click event.
+     */
+    #removeOption(event) {
+        event.target.closest('div').remove();
+        event.stopPropagation();
+    }
+
+    /**
+     * Focus the previous option relative to the specified input element.
+     *
+     * @param {HTMLElement} input - The input element.
+     */
+    #focusPreviousOption(input) {
+        if ($(input).parent().prev() !== undefined) {
+            $(input).parent().prev().find('input[type="text"]').trigger('focus');
+        } else {
+            const previous = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
+                .find('div[data-glpi-form-editor-selectable-question-options]')
+                .find('input[type="text"]').last();
+
+            if (previous !== undefined) {
+                previous.trigger('focus');
+            }
+        }
+    }
+
+    /**
+     * Focus the next option relative to the specified input element.
+     *
+     * @param {HTMLElement} input - The input element.
+     */
+    #focusNextOption(input) {
+        if ($(input).parent().next().length > 0) {
+            $(input).parent().next().find('input[type="text"]').trigger('focus');
+        } else {
+            const next = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
+                .find('input[type="text"]').last();
+
+            if (next !== undefined) {
+                next.trigger('focus');
+            }
+        }
+    }
+
+    /**
+     * Show the option when the question is focused.
+     *
+     * @param {HTMLElement} input - The input element.
+     */
+    #showOption(input) {
+        $(input).siblings('i[data-glpi-form-editor-question-option-handle]').css('visibility', 'visible');
+        $(input).siblings('input[type="radio"], input[type="checkbox"]').prop('disabled', false);
+        $(input).parent().removeAttr('data-glpi-form-editor-question-extra-details');
+        $(input).siblings('i').removeClass('d-none');
+    }
+
+    /**
+     * Add a new option if needed.
+     *
+     * @param {HTMLElement} input - The input element.
+     */
+    #addNewOptionIfNeeded(input) {
+        const isLast = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
+            .children().filter('div').last()
+            .find('input[type="text"]').get(0) === input;
+
+        if (isLast) {
+            this.#addOption(input);
+
+            // Update the uuid with a new random value (random number like mt_rand)
+            const uuid = getUUID();
+            $(input).parent().next().find('input[type="radio"], input[type="checkbox"]').val(uuid);
+            $(input).parent().next().find('input[type="text"]').attr('name', 'options[' + uuid + ']');
+
+            // Move the current option in the drag and drop container
+            $(input).parent().appendTo($(input).parent().siblings().filter('div[data-glpi-form-editor-selectable-question-options]').last());
+
+            // Focus the new option
+            $(input).trigger('focus');
+
+            /**
+             * Compute the state to update the input names
+             * Required to link radio inputs between them in the same question
+             * and unlink them between questions
+             */
+            window.glpi_form_editor_controller.computeState();
+        }
+    }
+
+    /**
+     * Hide the option when the question is unfocused.
+     *
+     * @param {HTMLElement} input - The input element.
+     */
+    #hideOption(input) {
+        $(input).parent().attr('data-glpi-form-editor-question-extra-details', '');
+        $(input).siblings('input[type="radio"], input[type="checkbox"]').prop('disabled', true);
+        $(input).siblings('input[type="radio"], input[type="checkbox"]').prop('checked', false);
+    }
+
+    /**
+     * Remove the last option if needed.
+     * Also remove all previous empty options.
+     *
+     * @param {HTMLElement} input - The input element.
+     */
+    #removeLastOptionIfNeeded(input) {
+        const isLast = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
+            .children('div').last()
+            .find('input[type="text"]').get(0) === input;
+
+        // Remove the last option if the value is empty and if the option is the last
+        if (isLast) {
+            // Remove all previous empty options
+            while ($(input).parent().siblings('div').last().find('input[type="text"]').get(0).value === '') {
+                $(input).parent().siblings('div').last().remove();
+            }
+
+            // Focus the empty option
+            $(input).closest('div[data-glpi-form-editor-question-type-specific]')
+                .find('input[type="text"]').last().trigger('focus');
+
+            // Remove current option
+            $(input).parent().remove();
+        }
+    }
+
+    /**
+     * Handle the input event.
+     *
+     * @param {InputEvent} event - The input event.
+     */
+    #handleOptionChange(event) {
         const input = event.target;
         const container = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
             .find('div[data-glpi-form-editor-selectable-question-options]');
 
         if (input.value) {
-            $(input).siblings('i[data-glpi-form-editor-question-option-handle]').css('visibility', 'visible');
-            $(input).siblings('input[type="radio"], input[type="checkbox"]').prop('disabled', false);
-            $(input).parent().removeAttr('data-glpi-form-editor-question-extra-details');
-            $(input).siblings('i').removeClass('d-none');
-
-
-            const is_last = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
-                .children().filter('div').last()
-                .find('input[type="text"]').get(0) === input;
-
-            if (is_last) {
-                // Adding a new option
-                const template = container.parent().find('template').get(0);
-                const clone = template.content.cloneNode(true);
-
-                $(input).parent().after(clone);
-
-                // Register the new option listeners
-                this.#registerOptionListeners($(input).parent().next());
-
-                // Update the uuid with a new random value (random number like mt_rand)
-                const uuid = Math.floor(Math.random() * (2147483647 - 0 + 1)) + 0;
-                $(input).parent().next().find('input[type="radio"], input[type="checkbox"]').val(uuid);
-                $(input).parent().next().find('input[type="text"]').attr('name', 'options[' + uuid + ']');
-
-                // Move the current option in the drag and drop container
-                $(input).parent().appendTo($(input).parent().siblings().filter('div[data-glpi-form-editor-selectable-question-options]').last());
-
-                // Focus the new option
-                $(input).trigger('focus');
-
-                /**
-                 * Compute the state to update the input names
-                 * Required to link radio inputs between them in the same question
-                 * and unlink them between questions
-                 */
-                window.glpi_form_editor_controller.computeState();
-            }
+            this.#showOption(input);
+            this.#addNewOptionIfNeeded(input);
         } else {
-            // Hide the option when the question is unfocused
-            $(input).parent().attr('data-glpi-form-editor-question-extra-details', '');
-            $(input).siblings('input[type="radio"], input[type="checkbox"]').prop('disabled', true);
-            $(input).siblings('input[type="radio"], input[type="checkbox"]').prop('checked', false);
-
-            const is_last = $(input).closest('div[data-glpi-form-editor-selectable-question-options]')
-                .children('div').last()
-                .find('input[type="text"]').get(0) === input;
-
-            // Remove the last option if the value is empty and if the option is the last
-            if (is_last) {
-                // Remove all previous empty options
-                while ($(input).parent().siblings('div').last().find('input[type="text"]').get(0).value === '') {
-                    $(input).parent().siblings('div').last().remove();
-                }
-
-                // Focus the empty option
-                $(input).closest('div[data-glpi-form-editor-question-type-specific]')
-                    .find('input[type="text"]').last().trigger('focus');
-
-                // Remove current option
-                $(input).parent().remove();
-            }
+            this.#hideOption(input);
+            this.#removeLastOptionIfNeeded(input);
         }
 
         // Reload sortable
         sortable(container);
     }
 
-    handleKeydown(event) {
+    /**
+     * Handle the keydown event.
+     *
+     * Enter: Add a new option after the current one and focus it.
+     * Backspace: Remove the option if the value is empty.
+     * Arrow Up or Shift + Tab: Focus the previous option.
+     * Arrow Down or Tab: Focus the next option.
+     *
+     * @param {KeyboardEvent} event - The keydown event.
+     */
+    #handleKeydown(event) {
         const input = event.target;
         const container = $(input).closest('div[data-glpi-form-editor-selectable-question-options]');
 
@@ -204,17 +323,7 @@ class GlpiFormQuestionTypeSelectable {
                     return;
                 }
 
-                // Adding a new option
-                const template = container.parent().find('template').get(0);
-                const clone = template.content.cloneNode(true);
-
-                $(input).parent().after(clone);
-                $(input).parent().next().find('input[type="text"]').trigger('focus');
-                $(input).parent().next().find('i').removeClass('d-none');
-                $(input).parent().next().find('i[data-glpi-form-editor-question-option-handle]').css('visibility', 'visible');
-
-                // Register the new option listeners
-                this.#registerOptionListeners($(input).parent().next());
+                this.#addOption(input, true, true);
             }
         } else if (event.key === 'Backspace') {
             const is_last = $(input).closest('div[data-glpi-form-editor-question-type-specific]').children().filter('div').last().find('input[type="text"]').get(0) === input;
@@ -223,12 +332,8 @@ class GlpiFormQuestionTypeSelectable {
             if (input.value === '' && !is_last) {
                 event.preventDefault();
 
-                // Focus the previous option
-                if ($(input).parent().prev() !== undefined) {
-                    $(input).parent().prev().find('input[type="text"]').trigger('focus');
-                }
-
-                this.removeOption(event);
+                this.#focusPreviousOption(input);
+                this.#removeOption(event);
             }
         } else if (
             event.key === 'ArrowUp'
@@ -236,35 +341,14 @@ class GlpiFormQuestionTypeSelectable {
         ) {
             event.preventDefault();
 
-            // Focus the previous option
-            if ($(input).parent().prev() !== undefined) {
-                $(input).parent().prev().find('input[type="text"]').trigger('focus');
-            } else {
-                const previous = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
-                    .find('div[data-glpi-form-editor-selectable-question-options]')
-                    .find('input[type="text"]').last();
-
-                if (previous !== undefined) {
-                    previous.trigger('focus');
-                }
-            }
+            this.#focusPreviousOption(input);
         } else if (
             event.key === 'ArrowDown'
             || event.key === 'Tab'
         ) {
             event.preventDefault();
 
-            // Focus the next option
-            if ($(input).parent().next().length > 0) {
-                $(input).parent().next().find('input[type="text"]').trigger('focus');
-            } else {
-                const next = $(input).closest('div[data-glpi-form-editor-question-type-specific]')
-                    .find('input[type="text"]').last();
-
-                if (next !== undefined) {
-                    next.trigger('focus');
-                }
-            }
+            this.#focusNextOption(input);
         }
 
         // Reload sortable
