@@ -69,9 +69,15 @@ abstract class AbstractQuestionTypeShortAnswer implements QuestionTypeInterface
     }
 
     #[Override]
-    public static function validateExtraDataInput(array &$input): bool
+    public static function validateExtraDataInput(array $input): bool
     {
         return empty($input); // No extra data for this question type
+    }
+
+    #[Override]
+    public static function prepareExtraData(array $input): array
+    {
+        return $input; // No need to prepare the extra data
     }
 
     #[Override]

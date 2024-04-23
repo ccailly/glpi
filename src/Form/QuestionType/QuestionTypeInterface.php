@@ -69,7 +69,16 @@ interface QuestionTypeInterface
      *
      * @return bool
      */
-    public static function validateExtraDataInput(array &$input): bool;
+    public static function validateExtraDataInput(array $input): bool;
+
+    /**
+     * Prepare the extra data for the question.
+     * This method is called before saving the question.
+     *
+     * @param array $input The input data to prepare.
+     * @return array The prepared extra data.
+     */
+    public static function prepareExtraData(array $input): array;
 
     /**
      * Render the administration template for the given question.

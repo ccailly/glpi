@@ -181,7 +181,7 @@ class QuestionTypeDateTime implements QuestionTypeInterface
     }
 
     #[Override]
-    public static function validateExtraDataInput(array &$input): bool
+    public static function validateExtraDataInput(array $input): bool
     {
         $allowed_keys = [
             'is_default_value_current_time',
@@ -191,6 +191,12 @@ class QuestionTypeDateTime implements QuestionTypeInterface
 
         return empty(array_diff(array_keys($input), $allowed_keys))
             && array_reduce($input, fn($carry, $value) => $carry && preg_match('/^[01]$/', $value), true);
+    }
+
+    #[Override]
+    public static function prepareExtraData(array $input): array
+    {
+        return $input; // No need to prepare the extra data
     }
 
     #[Override]

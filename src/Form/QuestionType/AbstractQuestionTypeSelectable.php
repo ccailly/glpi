@@ -74,19 +74,25 @@ abstract class AbstractQuestionTypeSelectable implements QuestionTypeInterface
     }
 
     #[Override]
-    public static function validateExtraDataInput(array &$input): bool
+    public static function validateExtraDataInput(array $input): bool
     {
         // The input can not be empty, always have at least one option : the last one can be empty
         if (empty($input) || !isset($input['options'])) {
             return false;
         }
 
+        return true;
+    }
+
+    #[Override]
+    public static function prepareExtraData(array $input): array
+    {
         // The last option can be empty, so we need to remove it
         if (isset($input['options']) && end($input['options']) === '') {
             array_pop($input['options']);
         }
 
-        return true;
+        return $input;
     }
 
     /**
