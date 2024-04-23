@@ -48,6 +48,12 @@ final class QuestionTypeUrgency implements QuestionTypeInterface
     }
 
     #[Override]
+    public static function loadJavascriptFiles(): array
+    {
+        return [];
+    }
+
+    #[Override]
     public static function formatDefaultValueForDB(mixed $value): ?string
     {
         return $value;
@@ -57,6 +63,12 @@ final class QuestionTypeUrgency implements QuestionTypeInterface
     public static function validateExtraDataInput(array $input): bool
     {
         return empty($input); // No extra data for this question type
+    }
+
+    #[Override]
+    public static function prepareExtraData(array $input): array
+    {
+        return $input; // No need to prepare the extra data
     }
 
     /**
