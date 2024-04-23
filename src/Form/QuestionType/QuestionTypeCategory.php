@@ -76,6 +76,11 @@ enum QuestionTypeCategory: string
     case CHECKBOX = "checkbox";
 
     /**
+     * Question that expect a file upload
+     */
+    case FILE = "file";
+
+    /**
      * Get category label
      * @return string
      */
@@ -89,6 +94,7 @@ enum QuestionTypeCategory: string
             self::URGENCY => __("Urgency"),
             self::RADIO => __("Radio"),
             self::CHECKBOX => __("Checkbox"),
+            self::FILE => __("File")
         };
     }
 }

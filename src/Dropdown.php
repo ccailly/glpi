@@ -2141,29 +2141,30 @@ JAVASCRIPT;
     public static function showFromArray($name, array $elements, $options = [])
     {
 
-        $param['value']               = '';
-        $param['values']              = [''];
-        $param['class']               = 'form-select';
-        $param['tooltip']             = '';
-        $param['option_tooltips']     = [];
-        $param['used']                = [];
-        $param['readonly']            = false;
-        $param['on_change']           = '';
-        $param['width']               = '';
-        $param['multiple']            = false;
-        $param['size']                = 1;
-        $param['display']             = true;
-        $param['other']               = false;
-        $param['rand']                = mt_rand();
-        $param['emptylabel']          = self::EMPTY_VALUE;
-        $param['display_emptychoice'] = false;
-        $param['disabled']            = false;
-        $param['required']            = false;
-        $param['noselect2']           = false;
-        $param['templateResult']      = "templateResult";
-        $param['templateSelection']   = "templateSelection";
-        $param['track_changes']       = "true";
-        $param['init']                = true;
+        $param['value']                 = '';
+        $param['values']                = [''];
+        $param['class']                 = 'form-select';
+        $param['tooltip']               = '';
+        $param['option_tooltips']       = [];
+        $param['used']                  = [];
+        $param['readonly']              = false;
+        $param['on_change']             = '';
+        $param['width']                 = '';
+        $param['multiple']              = false;
+        $param['size']                  = 1;
+        $param['display']               = true;
+        $param['other']                 = false;
+        $param['rand']                  = mt_rand();
+        $param['emptylabel']            = self::EMPTY_VALUE;
+        $param['display_emptychoice']   = false;
+        $param['disabled']              = false;
+        $param['required']              = false;
+        $param['noselect2']             = false;
+        $param['templateResult']        = "templateResult";
+        $param['templateSelection']     = "templateSelection";
+        $param['track_changes']         = "true";
+        $param['init']                  = true;
+        $param['additional_attributes'] = '';
 
         if (is_array($options) && count($options)) {
             if (isset($options['value']) && strlen($options['value'])) {
@@ -2250,6 +2251,10 @@ JAVASCRIPT;
 
             if (!$param['track_changes']) {
                 $output .= " data-track-changes=''";
+            }
+
+            if ($param['additional_attributes']) {
+                $output .= ' ' . $param['additional_attributes'];
             }
 
             $output .= '>';
