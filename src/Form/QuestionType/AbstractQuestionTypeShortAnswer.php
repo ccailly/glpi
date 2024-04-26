@@ -52,6 +52,24 @@ abstract class AbstractQuestionTypeShortAnswer extends AbstractQuestionType
     abstract public function getInputType(): string;
 
     #[Override]
+    public function onQuestionTypeChange(string $old_type, string $new_type, string $value): ?string
+    {
+        if (!is_a($new_type, QuestionTypeInterface::class, true)) {
+            return null;
+        }
+
+        if ((new $old_type())->getCategory() !== self::getCategory()) {
+            return null;
+        }
+
+        if (!is_numeric($value) && $new_type === QuestionTypeNumber::class) {
+            return null;
+        }
+
+        return $value;
+    }
+
+    #[Override]
     public function renderAdministrationTemplate(
         ?Question $question = null,
         ?string $input_prefix = null

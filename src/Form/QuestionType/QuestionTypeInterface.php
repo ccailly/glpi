@@ -72,6 +72,18 @@ interface QuestionTypeInterface
     public static function validateExtraDataInput(array $input): bool;
 
     /**
+     * Handle the change of the question type.
+     * This method is called when the question type is changed.
+     * It allows to keep the previous data if possible.
+     *
+     * @param string $old_type The previous question type.
+     * @param string $new_type The new question type.
+     * @param string $value The previous value of the question.
+     * @return ?string The new value of the question.
+     */
+    public function onQuestionTypeChange(string $old_type, string $new_type, string $value): ?string;
+
+    /**
      * Prepare the extra data for the question.
      * This method is called before saving the question.
      *

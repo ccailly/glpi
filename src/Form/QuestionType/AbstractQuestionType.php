@@ -64,6 +64,12 @@ abstract class AbstractQuestionType implements QuestionTypeInterface
     }
 
     #[Override]
+    public function onQuestionTypeChange(string $oldType, string $newType, string $value): ?string
+    {
+        return null; // Nothing to do by default
+    }
+
+    #[Override]
     public static function prepareExtraData(array $input): array
     {
         return $input; // No need to prepare the extra data

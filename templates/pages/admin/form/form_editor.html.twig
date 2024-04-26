@@ -331,6 +331,7 @@
 
 <script>
     window.glpi_form_editor_controller = new GlpiFormEditorController(
+        {{ item.fields.id }},
         "[data-glpi-form-editor-container]",
         {{ item.fields.is_draft ? "true" : "false" }},
         "{{ question_types_manager.getDefaultTypeClass()|escape('js') }}",

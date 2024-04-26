@@ -39,6 +39,12 @@
 class GlpiFormEditorController
 {
     /**
+     * Forms id
+     * @type {number}
+     */
+    #forms_id;
+
+    /**
      * Target form editor (jquery selector)
      * @type {string}
      */
@@ -66,12 +72,14 @@ class GlpiFormEditorController
      * Create a new GlpiFormEditorController instance for the given target.
      * The target must be a valid form.
      *
+     * @param {number}  forms_id
      * @param {string}  target
      * @param {boolean} is_draft
-     * @param {string} defaultQuestionType
-     * @param {string} templates
+     * @param {string}  defaultQuestionType
+     * @param {string}  templates
      */
-    constructor(target, is_draft, defaultQuestionType, templates) {
+    constructor(forms_id, target, is_draft, defaultQuestionType, templates) {
+        this.#forms_id            = forms_id;
         this.#target              = target;
         this.#is_draft            = is_draft;
         this.#defaultQuestionType = defaultQuestionType;
@@ -862,6 +870,64 @@ class GlpiFormEditorController
     }
 
     /**
+     * Get default value for the given question.
+     *
+     * @param {jQuery} question
+     * @returns {string}
+     * @throws {Error} If the default value field is not found
+     */
+    #getQuestionDefaultValue(question, field_name = "default_value") {
+        let expressions = [
+            `input[name="${field_name}"]:visible`,
+            `input[name="${field_name}[]"]:visible`,
+            `input[data-glpi-form-editor-original-name="${field_name}"]:visible`,
+            `input[data-glpi-form-editor-original-name="${field_name}[]"]:visible`,
+            `select[name="${field_name}"]:visible`,
+            `select[name="${field_name}[]"]:visible`,
+            `select[data-glpi-form-editor-original-name="${field_name}"]:visible`,
+            `select[data-glpi-form-editor-original-name="${field_name}[]"]:visible`,
+            `textarea[name="${field_name}"]`,
+            `textarea[data-glpi-form-editor-original-name="${field_name}"]`,
+        ]
+
+        let fields = question.find(expressions.join(', '));
+        if (fields.length == 0) {
+            throw new Error("Default value field not found");
+        }
+
+        return fields.val();
+    }
+
+    /**
+     * Set default value for the given question.
+     *
+     * @param {jQuery} question
+     * @param {string} value
+     * @throws {Error} If the default value field is not found
+     */
+    #setQuestionDefaultValue(question, value, field_name = "default_value") {
+        let expressions = [
+            `input[name="${field_name}"]:visible`,
+            `input[name="${field_name}[]"]:visible`,
+            `input[data-glpi-form-editor-original-name="${field_name}"]:visible`,
+            `input[data-glpi-form-editor-original-name="${field_name}[]"]:visible`,
+            `select[name="${field_name}"]:visible`,
+            `select[name="${field_name}[]"]:visible`,
+            `select[data-glpi-form-editor-original-name="${field_name}"]:visible`,
+            `select[data-glpi-form-editor-original-name="${field_name}[]"]:visible`,
+            `textarea[name="${field_name}"]`,
+            `textarea[data-glpi-form-editor-original-name="${field_name}"]`,
+        ]
+
+        let fields = question.find(expressions.join(', '));
+        if (fields.length == 0) {
+            throw new Error("Default value field not found");
+        }
+
+        fields.val(value);
+    }
+
+    /**
      * Get input value for the given question.
      * @param {jQuery} item Question or section
      * @param {string} field
@@ -973,6 +1039,12 @@ class GlpiFormEditorController
      * @param {string} type     New type
      */
     #changeQuestionType(question, type) {
+        // Get the current question type
+        const old_type = this.#getItemInput(question, "type");
+
+        // Get the current default_value
+        const old_default_value = this.#getQuestionDefaultValue(question);
+
         // Clear the specific form of the question
         const specific = question
             .find("[data-glpi-form-editor-question-type-specific]");
@@ -1007,6 +1079,13 @@ class GlpiFormEditorController
             extra_data,
         );
 
+        // Update the new question type
+        this.#setItemInput(question, "type", type);
+
+        // Convert the default value if needed
+        this.#convertQuestionDefaultValue(question, old_default_value, old_type, type);
+
+        // Trigger a custom event to notify the change
         $(document).trigger('glpi-form-editor-question-type-changed', [question, type]);
     }
 
@@ -1501,6 +1580,35 @@ class GlpiFormEditorController
     #enableTinyMce(ids) {
         ids.forEach((id) => {
             tinymce.init(window.tinymce_editor_configs[id]);
+        });
+    }
+
+    /**
+     * Try to convert the default value of the given question to the new type.
+     *
+     * @param {jQuery} question
+     * @param {string} type
+     */
+    #convertQuestionDefaultValue(question, old_value, old_type, new_type) {
+        // Convert the default value to the new type
+        $.ajax({
+            url: CFG_GLPI.root_doc + "/ajax/form/convert_default_value.php",
+            type: 'POST',
+            data: {
+                forms_id: this.#forms_id,
+                old_type: old_type,
+                new_type: new_type,
+                value: old_value,
+            },
+            success: (data) => {
+                if (data.new_value !== null) {
+                    // Set the new default value
+                    this.#setQuestionDefaultValue(question, data.new_value);
+                }
+            },
+            error: () => {
+                console.error(`Failed to convert default value to new type`);
+            }
         });
     }
 }
