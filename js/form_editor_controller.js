@@ -888,7 +888,7 @@ class GlpiFormEditorController
             `select[data-glpi-form-editor-original-name="${field_name}[]"]:visible`,
             `textarea[name="${field_name}"]`,
             `textarea[data-glpi-form-editor-original-name="${field_name}"]`,
-        ]
+        ];
 
         let fields = question.find(expressions.join(', '));
         if (fields.length == 0) {
@@ -917,7 +917,7 @@ class GlpiFormEditorController
             `select[data-glpi-form-editor-original-name="${field_name}[]"]:visible`,
             `textarea[name="${field_name}"]`,
             `textarea[data-glpi-form-editor-original-name="${field_name}"]`,
-        ]
+        ];
 
         let fields = question.find(expressions.join(', '));
         if (fields.length == 0) {
