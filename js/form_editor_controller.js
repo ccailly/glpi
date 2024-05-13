@@ -902,7 +902,7 @@ class GlpiFormEditorController
      * Set default value for the given question.
      *
      * @param {jQuery} question
-     * @param {string} value
+     * @param {string | string[]} value
      * @throws {Error} If the default value field is not found
      */
     #setQuestionDefaultValue(question, value, field_name = "default_value") {
@@ -924,7 +924,7 @@ class GlpiFormEditorController
             throw new Error("Default value field not found");
         }
 
-        fields.val(value);
+        fields.val(value).trigger('glpi-form-editor-default-value-updated', [value]);
     }
 
     /**
@@ -993,6 +993,31 @@ class GlpiFormEditorController
     }
 
     /**
+     * Retrieve extra data fields for the given question.
+     * Returns an object with the field name as key and their value as value.
+     *
+     * @param {jQuery} question
+     * @returns {Object}
+     */
+    #getExtraDataFields(question) {
+        const extra_data = question.find("[data-glpi-form-editor-specific-question-options]");
+
+        let fields = {};
+        extra_data.find(':input').each((index, input) => {
+            const name = $(input).data("data-glpi-form-editor-original-name") ?? $(input).attr("name");
+            const value = $(input).val();
+
+            if (input.type === "checkbox") {
+                fields[name] = $(input).prop("checked");
+            } else {
+                fields[name] = value;
+            }
+        });
+
+        return fields;
+    }
+
+    /**
      * Compute the ideal width of the given input based on its content.
      * @param {HTMLElement} input
      */
@@ -1045,6 +1070,9 @@ class GlpiFormEditorController
         // Get the current default_value
         const old_default_value = this.#getQuestionDefaultValue(question);
 
+        // Get the current extra data fields
+        const old_extra_data_fields = this.#getExtraDataFields(question);
+
         // Clear the specific form of the question
         const specific = question
             .find("[data-glpi-form-editor-question-type-specific]");
@@ -1086,7 +1114,7 @@ class GlpiFormEditorController
         this.#convertQuestionDefaultValue(question, old_default_value, old_type, type);
 
         // Trigger a custom event to notify the change
-        $(document).trigger('glpi-form-editor-question-type-changed', [question, type]);
+        $(document).trigger('glpi-form-editor-question-type-changed', [question, type, old_type, old_extra_data_fields]);
     }
 
     /**

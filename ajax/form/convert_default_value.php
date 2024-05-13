@@ -67,7 +67,7 @@ if (!$old_type) {
 if (
     !in_array(
         $old_type,
-        array_map(fn($type) => $type::class, QuestionTypesManager::getInstance()->getQuestionTypes())
+        array_map(fn ($type) => $type::class, QuestionTypesManager::getInstance()->getQuestionTypes())
     )
 ) {
     Response::sendError(400, __('Invalid old type'));
@@ -83,7 +83,7 @@ if (!$new_type) {
 if (
     !in_array(
         $new_type,
-        array_map(fn($type) => $type::class, QuestionTypesManager::getInstance()->getQuestionTypes())
+        array_map(fn ($type) => $type::class, QuestionTypesManager::getInstance()->getQuestionTypes())
     )
 ) {
     Response::sendError(400, __('Invalid new type'));
@@ -91,11 +91,24 @@ if (
 
 // Validate value parameter
 $value = $_POST['value'] ?? '';
-if (!is_string($value)) {
+if (
+    !is_string($value)
+    && (
+        is_array($value)
+        && !array_reduce($value, fn ($carry, $item) => $carry && is_string($item), true)
+    )
+) {
     Response::sendError(400, __('Invalid value'));
 }
 
-$new_value = (new $new_type())->onQuestionTypeChange($old_type, $new_type, $value);
+if (is_array($value)) {
+    $new_value = array_map(
+        fn ($item) => (new $new_type())->onQuestionTypeChange($old_type, $new_type, $item),
+        $value
+    );
+} else {
+    $new_value = (new $new_type())->onQuestionTypeChange($old_type, $new_type, $value);
+}
 
 // Success response
 $response = new Response(

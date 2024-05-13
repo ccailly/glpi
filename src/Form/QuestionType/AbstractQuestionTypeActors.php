@@ -52,6 +52,40 @@ abstract class AbstractQuestionTypeActors extends AbstractQuestionType
     abstract public function getAllowedActorTypes(): array;
 
     #[Override]
+    public static function loadJavascriptFiles(): array
+    {
+        return ['js/form_question_actors.js'];
+    }
+
+    #[Override]
+    public function onQuestionTypeChange(string $old_type, string $new_type, string $value): ?string
+    {
+        if (!is_a($new_type, QuestionTypeInterface::class, true)) {
+            return null;
+        }
+
+        if ((new $old_type())->getCategory() !== self::getCategory()) {
+            return null;
+        }
+
+        // Check if the new type accept the actor type
+        if (
+            array_reduce(
+                $new_type::getAllowedActorTypes(),
+                function ($carry, $actor_type) use ($value) {
+                    $prefix = strtolower($actor_type) . 's_id';
+                    return $carry || strpos($value, $prefix) === 0;
+                },
+                false
+            )
+        ) {
+            return $value;
+        }
+
+        return null;
+    }
+
+    #[Override]
     public static function formatDefaultValueForDB(mixed $value): ?string
     {
         if (is_array($value)) {
@@ -69,7 +103,7 @@ abstract class AbstractQuestionTypeActors extends AbstractQuestionType
         ];
 
         return empty(array_diff(array_keys($input), $allowed_keys))
-            && array_reduce($input, fn($carry, $value) => $carry && preg_match('/^[01]$/', $value), true);
+            && array_reduce($input, fn ($carry, $value) => $carry && preg_match('/^[01]$/', $value), true);
     }
 
     /**
@@ -129,7 +163,7 @@ abstract class AbstractQuestionTypeActors extends AbstractQuestionType
             values,
             {
                 'multiple': false,
-                'init': init,
+                'init': question is not null,
                 'allowed_types': allowed_types
             }
         ]) %}
@@ -138,7 +172,7 @@ abstract class AbstractQuestionTypeActors extends AbstractQuestionType
             values,
             {
                 'multiple': true,
-                'init': init,
+                'init': question is not null,
                 'allowed_types': allowed_types
             }
         ]) %}
@@ -172,11 +206,33 @@ abstract class AbstractQuestionTypeActors extends AbstractQuestionType
                 ]|join(' ')
             }
         ) }}
+
+    <script>
+        $(document).ready(function() {
+            {% if question is not null %}
+                const question = $('div[data-glpi-form-editor-question-details]').filter(function() {
+                    return $(this).find('input[name="id"][value="{{ question.getID() }}"]').length > 0
+                        && $(this).find('input[name="type"][value="{{ question_type|escape('js')|escape('js') }}"]').length > 0;
+                });
+                new GlpiFormQuestionTypeActors(question);
+            {% else %}
+                $(document).on(
+                    'glpi-form-editor-question-type-changed',
+                    function(e, question, type, old_type, old_extra_data) {
+                        if (type === '{{ question_type|escape('js') }}') {
+                            let glpi_form_question_type_actors = new GlpiFormQuestionTypeActors(question, old_extra_data);
+                        }
+                    }
+                );
+            {% endif %}
+        });
+    </script>
 TWIG;
 
         $twig = TemplateRenderer::getInstance();
         return $twig->renderFromStringTemplate($template, [
-            'init'               => $question != null,
+            'question'           => $question,
+            'question_type'      => $this::class,
             'values'             => $this->getDefaultValue($question, $this->isMultipleActors($question)),
             'allowed_types'      => $this->getAllowedActorTypes(),
             'is_multiple_actors' => $this->isMultipleActors($question)
@@ -196,23 +252,10 @@ TWIG;
                     data-glpi-form-editor-specific-question-extra-data>
                     <input class="form-check-input" type="checkbox" name="is_multiple_actors"
                         value="1" {{ is_multiple_actors ? 'checked' : '' }}
-                        onchange="handleMultipleActorsCheckbox_{{ rand }}(this)"
                         data-glpi-form-editor-specific-question-extra-data>
                     <span class="form-check-label">{{ is_multiple_actors_label }}</span>
                 </label>
             </div>
-
-            <script>
-                function handleMultipleActorsCheckbox_{{ rand }}(input) {
-                    const is_checked = $(input).is(':checked');
-                    const selects = $(input).closest('div[data-glpi-form-editor-question]')
-                        .find('div .actors-dropdown');
-
-                    {# Disable all selects and toggle their visibility, then enable the right ones #}
-                    selects.toggleClass('d-none').find('select').prop('disabled', is_checked)
-                        .filter('[multiple]').prop('disabled', !is_checked);
-                }
-            </script>
 TWIG;
 
         $twig = TemplateRenderer::getInstance();

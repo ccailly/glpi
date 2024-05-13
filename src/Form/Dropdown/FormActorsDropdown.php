@@ -78,11 +78,18 @@ final class FormActorsDropdown extends AbstractRightsDropdown
                 let icon = '';
                 let text = data.text;
                 let title = data.title;
-                if (data.itemtype === 'User') {
+                let itemtype = data.itemtype;
+
+                if (data.element) {
+                    title = $(data.element).data('title') ?? title;
+                    itemtype = $(data.element).data('itemtype') ?? itemtype;
+                }
+
+                if (itemtype === 'User') {
                     icon = '<i class="ti fa-fw ti-user mx-1" title="' + title + '"></i>';
-                } else if (data.itemtype === 'Group') {
+                } else if (itemtype === 'Group') {
                     icon = '<i class="ti fa-fw ti-users mx-1" title="' + title + '"></i>';
-                } else if (data.itemtype === 'Supplier') {
+                } else if (itemtype === 'Supplier') {
                     icon = '<i class="ti fa-fw ti-package mx-1" title="' + title + '"></i>';
                 }
 
