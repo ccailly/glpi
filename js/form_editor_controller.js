@@ -63,6 +63,12 @@ class GlpiFormEditorController
     #templates;
 
     /**
+     * Flag to check if the form has been modified
+     * @type {boolean}
+     */
+    #unsaved_changes = false;
+
+    /**
      * Create a new GlpiFormEditorController instance for the given target.
      * The target must be a valid form.
      *
@@ -110,6 +116,9 @@ class GlpiFormEditorController
                 .find("[data-glpi-form-editor-form-details-name]")[0]
                 .select();
         }
+
+        // Register a change event on the form to track unsaved changes
+        $(this.#target).on('change', () => this.#handleUnsavedChanges());
     }
 
     /**
@@ -338,6 +347,12 @@ class GlpiFormEditorController
             // They must still be kept here as they benefits from the common code
             // like refreshUX() and glpiUnsavedFormChanges.
             case "question-sort-update":
+                break;
+
+            // Save and open preview
+            case "save-and-preview":
+                console.log('save-and-preview');
+                this.#saveAndPreviewForm();
                 break;
 
             // Unknown action
@@ -1501,6 +1516,38 @@ class GlpiFormEditorController
     #enableTinyMce(ids) {
         ids.forEach((id) => {
             tinymce.init(window.tinymce_editor_configs[id]);
+        });
+    }
+
+    /**
+     * Handle unsaved changes
+     */
+    #handleUnsavedChanges() {
+        this.#unsaved_changes = true;
+
+        // Hide and show actions based on unsaved changes
+        $(this.#target).find('[data-glpi-form-editor-preview-actions]')
+            .find('[data-glpi-form-editor-preview-action]').toggleClass('d-none', this.#unsaved_changes);
+        $(this.#target).find('[data-glpi-form-editor-preview-actions]')
+            .find('[data-glpi-form-editor-save-and-preview-action]').toggleClass('d-none', !this.#unsaved_changes);
+    }
+
+    #saveAndPreviewForm() {
+        // Disable the button to the next lifecycle to prevent multiple clicks
+        setTimeout(() => {
+            $(this.#target).find('[data-glpi-form-editor-save-and-preview-action]').prop('disabled', true);
+            $(this.#target).find('[data-glpi-form-editor-save-and-preview-icon]').toggleClass('d-none');
+            $(this.#target).find('[data-glpi-form-editor-save-and-preview-spinner]').toggleClass('d-none');
+        });
+
+        $(this.#target).on('glpi-ajax-controller-submit-success', () => {
+            // Enable the button again
+            $(this.#target).find('[data-glpi-form-editor-save-and-preview-action]').prop('disabled', false);
+            $(this.#target).find('[data-glpi-form-editor-save-and-preview-icon]').toggleClass('d-none');
+            $(this.#target).find('[data-glpi-form-editor-save-and-preview-spinner]').toggleClass('d-none');
+
+            // Open the preview page in a new tab
+            window.open($(this.#target).find('[data-glpi-form-editor-save-and-preview-action').data('glpi-form-editor-preview-url'), '_blank');
         });
     }
 }
