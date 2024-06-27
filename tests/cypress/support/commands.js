@@ -152,7 +152,7 @@ Cypress.Commands.add('iframe', {prevSubject: 'element'}, (iframe, url_pattern) =
  * @method awaitTinyMCE
  * @description Assert that the subject is a TinyMCE editor and try to wait for tinyMCE to initialize the editor.
  */
-Cypress.Commands.add('awaitTinyMCE',  {
+Cypress.Commands.add('awaitTinyMCE',  { 
     prevSubject: 'element',
 }, (subject) => {
     cy.wrap(subject).siblings('div.tox-tinymce').should('exist').find('iframe').iframe('about:srcdoc').find('p', {timeout: 10000});
