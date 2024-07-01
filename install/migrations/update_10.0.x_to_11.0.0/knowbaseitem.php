@@ -69,3 +69,30 @@ if (!$DB->fieldExists($table, $field_to_add)) {
     );
     $migration->addKey($table, $field_to_add);
 }
+
+$field_to_add = 'is_token_url';
+if (!$DB->fieldExists($table, $field_to_add)) {
+    $migration->addField(
+        $table,
+        $field_to_add,
+        'tinyint',
+        [
+            'value' => 0,
+            'after' => 'is_recursive'
+        ]
+    );
+    $migration->addKey($table, $field_to_add);
+}
+
+$field_to_add = 'token';
+if (!$DB->fieldExists($table, $field_to_add)) {
+    $migration->addField(
+        $table,
+        $field_to_add,
+        'text',
+        [
+            'after' => 'is_token_url'
+        ]
+    );
+    $migration->addKey($table, $field_to_add);
+}

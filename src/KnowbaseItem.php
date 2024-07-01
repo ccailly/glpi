@@ -118,6 +118,11 @@ class KnowbaseItem extends CommonDBVisible implements ExtraVisibilityCriteria
                   && $this->haveVisibilityAccess())
                  || ((Session::getLoginUserID() === false) && $this->isPubliclyVisible()));
         }
+
+        if ($this->fields["is_token_url"] && (isset($_GET['token']) && $this->fields["token"] == $_GET['token'])) {
+            return true;
+        }
+
         return (Session::haveRight(self::$rightname, READ) && $this->haveVisibilityAccess());
     }
 
@@ -562,7 +567,12 @@ class KnowbaseItem extends CommonDBVisible implements ExtraVisibilityCriteria
             }
         } else {
             $where = self::getVisibilityCriteriaKB();
-            $where['is_faq'] = 1;
+            $where[] = [
+                'OR' => [
+                    ['is_faq' => 1],
+                    ['is_token_url' => 1, 'token' => $_GET['token'] ?? '']
+                ]
+            ];
         }
 
         return $where;
@@ -705,6 +715,10 @@ class KnowbaseItem extends CommonDBVisible implements ExtraVisibilityCriteria
             $input["name"] = __('New item');
         }
 
+        if (isset($input['is_token_url']) && $input['is_token_url'] && empty($this->fields['token'])) {
+            $input['token'] = Toolbox::getRandomString(20);
+        }
+
         if (
             Session::haveRight(self::$rightname, self::PUBLISHFAQ)
             && !Session::haveRight(self::$rightname, UPDATE)
@@ -726,6 +740,11 @@ class KnowbaseItem extends CommonDBVisible implements ExtraVisibilityCriteria
         if (isset($input["name"]) && empty($input["name"])) {
             $input["name"] = __('New item');
         }
+
+        if (isset($input['is_token_url']) && $input['is_token_url']) {
+            $input['token'] = Toolbox::getRandomString(20);
+        }
+
         return $input;
     }
 
@@ -1130,6 +1149,13 @@ TWIG, $twig_params);
             ];
         }
 
+        if (isset($_GET['token'])) {
+            $criteria['WHERE']['OR'][] = [
+               'glpi_knowbaseitems.is_token_url'   => 1,
+               'glpi_knowbaseitems.token'          => $_GET['token'],
+            ];
+        }
+
         if ($params['knowbaseitemcategories_id'] !== KnowbaseItemCategory::SEEALL) {
             $criteria['LEFT JOIN'][KnowbaseItem_KnowbaseItemCategory::getTable()] = [
                 'FKEY' => [
@@ -1187,6 +1213,8 @@ TWIG, $twig_params);
 
             case 'search':
                 if (strlen($params["contains"]) > 0) {
+                    unset($criteria['WHERE']['glpi_knowbaseitemcategories.id']);
+
                     $search = $params["contains"];
                     $search_wilcard = self::computeBooleanFullTextSearch($search);
 

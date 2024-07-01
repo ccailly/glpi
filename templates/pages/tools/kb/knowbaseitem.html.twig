@@ -56,14 +56,34 @@
             {% else %}
                 {{ __('This item is not part of the FAQ') }}
             {% endif %}
-            {{ fields.htmlField('', faq_label, null, {
-                no_label: true
-            }) }}
         {% endset %}
+        {{ fields.htmlField('', faq_label, null, {
+            no_label: true
+        }) }}
     {% endif %}
     {% if item.fields['users_id'] %}
         {% set user_field = call('getUserName', [item.fields['users_id'], has_profile_right('user', constant('READ')) ? 1 : 0]) %}
         {{ fields.htmlField('', user_field, __('Writer')) }}
+    {% else %}
+        {{ fields.nullField() }}
+    {% endif %}
+
+    {% if has_profile_right('knowbase', constant('KnowbaseItem::PUBLISHFAQ')) %}
+        {{ fields.dropdownYesNo(
+            'is_token_url',
+            item.fields['is_token_url'],
+            __('Share with a unique URL')
+        ) }}
+    {% else %}
+        {{ fields.nullField() }}
+    {% endif %}
+
+    {% if item.fields['is_token_url'] %}
+        {{ fields.htmlField(
+            '',
+            config('url_base') ~ '/front/helpdesk.faq.php?id=' ~ item.fields['id'] ~ '&amp;token=' ~ item.fields['token'],
+            __('Unique URL')
+        ) }}
     {% else %}
         {{ fields.nullField() }}
     {% endif %}
