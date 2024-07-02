@@ -33,6 +33,7 @@
  * ---------------------------------------------------------------------
  */
 
+use Glpi\Application\View\TemplateRenderer;
 use Glpi\Event;
 
 class RuleCollection extends CommonDBTM
@@ -681,34 +682,53 @@ JAVASCRIPT;
             $url = $CFG_GLPI["root_doc"];
         }
 
-        // if rules provides has default rules, then we're able to reset them
-        $ruleclass = $this->getRuleClass();
-        if ($ruleclass instanceof Rule && $ruleclass->hasDefaultRules()) {
-            echo "<a class='btn btn-primary' id='reset_rules' href='" . $rule->getSearchURL() . "?reinit=true&subtype=" . $ruleclass->getType() . "' " .
-            "onClick='if(confirm(\"" . __s('Rules will be erased and recreated from default. Are you sure?') . "\"))
-            { return true } else { return false; };' " .
-            "title='" . __s("Delete all rules and recreate them by default") . "'" .
-            ">" . __('Reset rules') . "</a>&nbsp;";
-        }
-        echo "<a class='btn btn-primary' href='#' data-bs-toggle='modal' data-bs-target='#allruletest$rand'>" .
-                  __('Test rules engine') . "</a>";
-        Ajax::createIframeModalWindow(
-            'allruletest' . $rand,
-            $url . "/front/rulesengine.test.php?" .
-                                          "sub_type=" . $ruleclass->getType() .
-                                          "&condition=" . $p['condition'],
-            ['title' => __('Test rules engine')]
-        );
-        echo "</div>";
+        $twig_params = [
+            'rule_class' => $rule::class,
+            'can_reset' => $rule instanceof Rule && $rule::hasDefaultRules() && Config::canUpdate()
+                && Session::getActiveEntity() === 0 && Session::getIsActiveEntityRecursive(),
+            'can_replay' => $this->can_replay_rules,
+            'reset_label' => __('Reset rules'),
+            'reset_warning' => __('Rules will be erased and recreated from defaults. All existing rules will be lost.'),
+            'test_label' => __('Test rules engine'),
+            'replay_label' => __('Replay the dictionary rules'),
+            'test_url' => $url . "/front/rulesengine.test.php?sub_type=" . $rule::class . "&condition={$p['condition']}"
+        ];
+        // language=Twig
+        echo TemplateRenderer::getInstance()->renderFromStringTemplate(<<<TWIG
+            <div class="d-flex justify-content-center">
+                {% if can_reset %}
+                    {% set open_btn %}
+                        <button type="button" class="btn btn-ghost-danger mx-1" data-bs-toggle="modal" data-bs-target="#reset_rules">
+                            {{ reset_label }}
+                        </button>
+                    {% endset %}
 
-        if ($this->can_replay_rules) {
-            echo "<div class='spaced center'>";
-            echo "<a class='btn btn-primary' href='" . $rule->getSearchURL() . "?replay_rule=replay_rule'>" .
-               __s('Replay the dictionary rules') . "</a>";
-            echo "</div>";
-        }
+                    {% set reset_btn %}
+                        <a class="btn btn-danger w-100" role="button" href="{{ rule_class|itemtype_search_path }}?reinit=true&subtype={{ rule_class }}">
+                            {{ reset_label }}
+                        </a>
+                    {% endset %}
 
-        echo "<div class='spaced'>";
+                    {% set content %}
+                        <p>{{ reset_warning }}</p>
+                    {% endset %}
+
+                    {{ include('components/danger_modal.html.twig', {
+                        'open_btn': open_btn,
+                        'modal_id': 'reset_rules',
+                        'confirm_btn': reset_btn,
+                        'content': content
+                    }) }}
+                {% endif %}
+                <button type="button" class="btn btn-primary mx-1" data-bs-toggle="modal" data-bs-target="#allruletest">{{ test_label }}</button>
+                {% do call('Ajax::createIframeModalWindow', ['allruletest', test_url, {title: test_label}]) %}
+                {% if can_replay %}
+                    <a class="btn btn-primary mx-1" role="button" href="{{ rule_class|itemtype_search_path }}?replay_rule=replay_rule">{{ replay_label }}</a>
+                {% endif %}
+            </div>
+TWIG, $twig_params);
+
+        echo "<div class='mb-2'>";
         $this->showAdditionalInformationsInForm($target);
         echo "</div>";
     }
