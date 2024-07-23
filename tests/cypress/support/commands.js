@@ -157,7 +157,12 @@ Cypress.Commands.add('iframe', {prevSubject: 'element'}, (iframe, url_pattern) =
 Cypress.Commands.add('awaitTinyMCE',  {
     prevSubject: 'element',
 }, (subject) => {
-    cy.wrap(subject).siblings('div.tox-tinymce').should('exist').find('iframe').iframe('about:srcdoc').find('p', {timeout: 10000});
+    cy.wrap(subject).invoke('val').then((val) => {
+        const first_tag = val.match(/<([^>]+)>/);
+        if (first_tag) {
+            cy.wrap(subject).siblings('div.tox-tinymce').should('exist').find('iframe').iframe('about:srcdoc').find(first_tag[1], {timeout: 10000}).should('exist');
+        }
+    });
 });
 
 Cypress.Commands.overwrite('type', (originalFn, subject, text, options) => {
