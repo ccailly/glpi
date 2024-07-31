@@ -57,7 +57,7 @@
     <section
         data-glpi-form-editor-on-click="set-active"
         data-glpi-form-editor-question-details
-        data-glpi-form-editor-allow-anonymous="{{ not allow_unauthenticated_access or question_type.isAllowedForUnauthenticatedAccess() ? 1 : 0 }}"
+        data-glpi-form-editor-allow_unauthenticated_access="{{ not allow_unauthenticated_access or question_type.isAllowedForUnauthenticatedAccess() ? 1 : 0 }}"
         class="card {{ question is not null and question.fields.is_mandatory ? 'mandatory-question' : '' }}"
         aria-label="{{ __("Question details") }}"
     >

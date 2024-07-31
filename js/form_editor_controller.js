@@ -1113,9 +1113,9 @@ class GlpiFormEditorController
         this.#setItemInput(question, "type", type);
 
         // Handle blacklisted question type warning visibility
-        const allow_anonymous = this.#getQuestionTemplate(type).find("[data-glpi-form-editor-question-details]").data("glpi-form-editor-allow-anonymous");
+        const allow_unauthenticated_accessicated_access = this.#getQuestionTemplate(type).find("[data-glpi-form-editor-question-details]").data("glpi-form-editor-allow_unauthenticated_access");
         question.find("[data-glpi-form-editor-blacklisted-question-type-warning]")
-            .toggleClass("d-none", allow_anonymous == 1);
+            .toggleClass("d-none", allow_unauthenticated_access == 1);
 
         // Convert the default value to match the new type
         this.#options[type].convertDefaultValue(
