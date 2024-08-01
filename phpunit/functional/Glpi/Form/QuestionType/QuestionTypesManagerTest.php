@@ -87,6 +87,7 @@ final class QuestionTypesManagerTest extends DbTestCase
             QuestionTypeCategory::RADIO,
             QuestionTypeCategory::CHECKBOX,
             QuestionTypeCategory::DROPDOWN,
+            QuestionTypeCategory::ITIL_CATEGORY,
         ];
 
         // Manual array comparison, `isEqualTo`  doesn't seem to work properly
@@ -173,6 +174,13 @@ final class QuestionTypesManagerTest extends DbTestCase
             QuestionTypeCategory::DROPDOWN,
             [
                 new \Glpi\Form\QuestionType\QuestionTypeDropdown(),
+            ]
+        ];
+
+        yield [
+            QuestionTypeCategory::ITIL_CATEGORY,
+            [
+                new \Glpi\Form\QuestionType\QuestionTypeITILCategory(),
             ]
         ];
     }

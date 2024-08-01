@@ -91,6 +91,11 @@ enum QuestionTypeCategory: string
     case DROPDOWN = "dropdown";
 
     /**
+     * Question that expect a ITIL category
+     */
+    case ITIL_CATEGORY = "itil_category";
+
+    /**
      * Get category label
      * @return string
      */
@@ -107,6 +112,7 @@ enum QuestionTypeCategory: string
             self::RADIO => __("Radio"),
             self::CHECKBOX => __("Checkbox"),
             self::DROPDOWN => _n('Dropdown', 'Dropdowns', 1),
+            self::ITIL_CATEGORY => _n('ITIL category', 'ITIL categories', 1),
         };
     }
 
@@ -127,6 +133,7 @@ enum QuestionTypeCategory: string
             self::RADIO => "ti ti-circle-dot",
             self::CHECKBOX => "ti ti-select",
             self::DROPDOWN => "ti ti-list",
+            self::ITIL_CATEGORY => "ti ti-category",
         };
     }
 }
