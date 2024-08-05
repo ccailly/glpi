@@ -38,6 +38,7 @@ namespace tests\units\Glpi\Form\QuestionType;
 use DbTestCase;
 use Glpi\Form\QuestionType\QuestionTypeInterface;
 use Glpi\Form\QuestionType\QuestionTypeCategory;
+use Glpi\Form\QuestionType\QuestionTypeLocation;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 final class QuestionTypesManagerTest extends DbTestCase
@@ -87,6 +88,7 @@ final class QuestionTypesManagerTest extends DbTestCase
             QuestionTypeCategory::RADIO,
             QuestionTypeCategory::CHECKBOX,
             QuestionTypeCategory::DROPDOWN,
+            QuestionTypeCategory::LOCATION,
         ];
 
         // Manual array comparison, `isEqualTo`  doesn't seem to work properly
@@ -173,6 +175,13 @@ final class QuestionTypesManagerTest extends DbTestCase
             QuestionTypeCategory::DROPDOWN,
             [
                 new \Glpi\Form\QuestionType\QuestionTypeDropdown(),
+            ]
+        ];
+
+        yield [
+            QuestionTypeCategory::LOCATION,
+            [
+                new \Glpi\Form\QuestionType\QuestionTypeLocation(),
             ]
         ];
     }
