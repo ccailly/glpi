@@ -79,6 +79,7 @@ final class QuestionTypeLocation extends AbstractQuestionType
                     'init'               : init,
                     'no_label'           : true,
                     'display_emptychoice': true,
+                    'aria_label'         : 'Location'
                 }
             ) }}
 TWIG;
