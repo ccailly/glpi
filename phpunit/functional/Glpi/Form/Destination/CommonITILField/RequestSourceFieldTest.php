@@ -131,7 +131,7 @@ final class RequestSourceFieldTest extends DbTestCase
         $this->updateItem(
             $destination::getType(),
             $destination->getId(),
-            ['config' => ['template' => $config->jsonSerialize()]],
+            ['config' => ['request_source' => $config->jsonSerialize()]],
             ["config"],
         );
 
