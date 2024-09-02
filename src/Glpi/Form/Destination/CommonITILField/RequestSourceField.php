@@ -57,7 +57,7 @@ class RequestSourceField extends AbstractConfigField
     #[Override]
     public function getLabel(): string
     {
-        return RequestType::getTypeName();
+        return RequestType::getTypeName(1);
     }
 
     #[Override]
