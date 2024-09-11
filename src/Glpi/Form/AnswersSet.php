@@ -87,7 +87,7 @@ final class AnswersSet extends CommonDBChild
     public function getTabNameForItem(CommonGLPI $item, $withtemplate = 0)
     {
         if (!($item instanceof Form)) {
-            return false;
+            return "";
         }
 
         $count = 0;
@@ -275,6 +275,30 @@ final class AnswersSet extends CommonDBChild
         }
 
         return $items;
+    }
+
+    /**
+     * Get links to created items that are visible for the current user.
+     *
+     * @return string[]
+     */
+    public function getLinksToCreatedItems(): array
+    {
+        $links = [];
+        foreach ($this->getCreatedItems() as $item) {
+            if ($item->canViewItem()) {
+                $links[] = $item->getLink();
+            }
+        }
+
+        // If no items were created, display one link to the answers themselves
+        // TODO: delete this later as we will force at least one ticket to
+        // be always created.
+        if (empty($links)) {
+            $links[] = $this->getLink();
+        }
+
+        return $links;
     }
 
     /**

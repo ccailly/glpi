@@ -108,6 +108,7 @@ TWIG;
             {
                 'no_label'            : true,
                 'display_emptychoice' : true,
+                'aria_label'          : label
             }
         ) }}
 TWIG;
@@ -120,20 +121,14 @@ TWIG;
                 range(1, 5),
                 array_map(fn ($urgency) => CommonITILObject::getUrgencyName($urgency), range(1, 5))
             ),
+            'label' => $question->fields['name'],
         ]);
     }
 
     #[Override]
-    public function renderAnswerTemplate($answer): string
+    public function formatRawAnswer(mixed $answer): string
     {
-        $template = <<<TWIG
-            <div class="form-control-plaintext">{{ answer }}</div>
-TWIG;
-
-        $twig = TemplateRenderer::getInstance();
-        return $twig->renderFromStringTemplate($template, [
-            'answer' => CommonITILObject::getUrgencyName($answer)
-        ]);
+        return CommonITILObject::getUrgencyName($answer);
     }
 
     #[Override]

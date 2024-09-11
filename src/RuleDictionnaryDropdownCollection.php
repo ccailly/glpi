@@ -108,7 +108,7 @@ class RuleDictionnaryDropdownCollection extends RuleCollection
 
                 if ($maxtime) {
                     $crt = explode(" ", microtime());
-                    if (($crt[0] + $crt[1]) > $maxtime) {
+                    if (((float)$crt[0] + (float)$crt[1]) > $maxtime) {
                         break;
                     }
                 }
@@ -238,7 +238,7 @@ class RuleDictionnaryDropdownCollection extends RuleCollection
                 $i++;
                 if ($maxtime) {
                     $crt = explode(" ", microtime());
-                    if (($crt[0] + $crt[1]) > $maxtime) {
+                    if (((float)$crt[0] + (float)$crt[1]) > $maxtime) {
                         break;
                     }
                 }
@@ -290,10 +290,9 @@ class RuleDictionnaryDropdownCollection extends RuleCollection
                             );
                         }
                         // Add new assoc
-                        $ct = new CartridgeItem();
                         foreach ($carttype as $cartID) {
                             foreach ($tab as $model) {
-                                $ct->addCompatibleType($cartID, $model);
+                                CartridgeItem::addCompatibleType($cartID, $model);
                             }
                         }
                     }

@@ -1410,6 +1410,7 @@ HTML;
                                 foreach ($val as $k => $object) {
                                     $menu[$key]['types'][] = $object;
                                     if (empty($menu[$key]['icon']) && method_exists($object, 'getIcon')) {
+                                        /** @var class-string $object */
                                         $menu[$key]['icon']    = $object::getIcon();
                                     }
                                 }
@@ -1511,7 +1512,7 @@ HTML;
 
         if (Session::haveRight("ticket", CREATE)) {
             $menu['create_ticket'] = [
-                'default' => '/front/helpdesk.public.php?create_ticket=1',
+                'default' => '/ServiceCatalog',
                 'title'   => __('Create a ticket'),
                 'icon'    => 'ti ti-plus',
             ];
@@ -1536,7 +1537,7 @@ HTML;
             ];
 
             if (Session::haveRight("ticket", CREATE)) {
-                $menu['tickets']['content']['ticket']['links']['add'] = '/front/helpdesk.public.php?create_ticket=1';
+                $menu['tickets']['content']['ticket']['links']['add'] = '/ServiceCatalog';
             }
         }
 
@@ -2584,7 +2585,7 @@ HTML;
                     ]
                 );
             }
-            $out .= "<a title='" . __('Massive actions') . "'
+            $out .= "<a role=\"button\" title='" . __('Massive actions') . "'
                      data-bs-toggle='tooltip' data-bs-placement='" . ($p['ontop'] ? "bottom" : "top") . "'
                      class='btn btn-sm btn-primary me-2' ";
             if (is_array($p['confirm'] || strlen($p['confirm']))) {
@@ -3662,7 +3663,7 @@ JS;
                     content_css: '{$content_css}',
                     content_style: '{$content_style}',
                     highlight_on_focus: false,
-                    autoresize_bottom_margin: 0, // Avoid excessive bottom padding
+                    autoresize_bottom_margin: 1, // Avoid excessive bottom padding
                     autoresize_overflow_padding: 0,
 
                     min_height: $editor_height,
@@ -4527,6 +4528,7 @@ JS;
             'parent_id_field'     => null,
             'templateResult'      => 'templateResult',
             'templateSelection'   => 'templateSelection',
+            'container_css_class' => '',
             'aria_label'          => '',
         ];
         $params = array_merge($default_options, $params);
@@ -4539,6 +4541,7 @@ JS;
         $multiple = $params['multiple'];
         $templateResult = $params['templateResult'];
         $templateSelection = $params['templateSelection'];
+        $container_css_class = $params['container_css_class'];
         $aria_label = $params['aria_label'];
         unset($params["on_change"], $params["width"]);
 
@@ -4612,6 +4615,7 @@ JS;
                 on_change: {$on_change},
                 templateResult: {$templateResult},
                 templateSelection: {$templateSelection},
+                container_css_class: '{$params['container_css_class']}',
                 params: {
                     {$js_params}
                 }
@@ -6292,9 +6296,9 @@ HTML;
         }
        // convert 3-digit hex to 6-digits.
         if (strlen($hexcolor) === 3) {
-            $hexcolor = $hexcolor[0] + $hexcolor[0]
-                   + $hexcolor[1] + $hexcolor[1]
-                   + $hexcolor[2] + $hexcolor[2];
+            $hexcolor = $hexcolor[0] . $hexcolor[0]
+                   . $hexcolor[1] . $hexcolor[1]
+                   . $hexcolor[2] . $hexcolor[2];
         }
         if (strlen($hexcolor) != 6) {
             throw new \Exception('Invalid HEX color.');
@@ -6320,9 +6324,9 @@ HTML;
 
        // pad each with zeros and return
         return "#"
-         + str_pad($r, 2, '0', STR_PAD_LEFT)
-         + str_pad($g, 2, '0', STR_PAD_LEFT)
-         + str_pad($b, 2, '0', STR_PAD_LEFT);
+         . str_pad($r, 2, '0', STR_PAD_LEFT)
+         . str_pad($g, 2, '0', STR_PAD_LEFT)
+         . str_pad($b, 2, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -6653,8 +6657,6 @@ CSS;
 
             return IntlDateFormatter::formatObject($ts_date, 'MMMM Y', $_SESSION['glpilanguage'] ?? 'en_GB');
         }
-
-        return "";
     }
 
     /**

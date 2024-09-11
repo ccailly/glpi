@@ -249,6 +249,8 @@ JS);
      * @param CommonDBTM $item   starting point of the graph
      * @param array      $graph  array containing the graph nodes and egdes
      * @param bool       $scripts True if the JS code should be generated
+     *
+     * @return void
      */
     public static function displayListView(CommonDBTM $item, array $graph, bool $scripts = false): void
     {
@@ -302,6 +304,7 @@ JS);
             echo '</thead>';
 
             foreach ($data as $itemtype => $items) {
+                /** @var class-string $itemtype */
                 echo '<tbody>';
 
                // Subheader
@@ -1011,10 +1014,13 @@ JS);
         $itemtypes = $CFG_GLPI["impact_asset_types"];
        // Sort by translated itemtypes
         uksort($itemtypes, function ($a, $b) {
+            /** @var class-string $a
+             *  @var class-string $b */
             return strcasecmp($a::getTypeName(), $b::getTypeName());
         });
         foreach ($itemtypes as $itemtype => $icon) {
-           // Do not display this itemtype if the user doesn't have READ rights
+            /** @var class-string $itemtype */
+            // Do not display this itemtype if the user doesn't have READ rights
             if (!Session::haveRight($itemtype::$rightname, READ)) {
                 continue;
             }

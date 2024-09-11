@@ -2006,7 +2006,7 @@ class User extends CommonDBTM
             return false;
         }
 
-        if ($ldap_connection instanceof \Ldap\Connection) {
+        if ($ldap_connection instanceof \LDAP\Connection) {
            //Set all the search fields
             $this->fields['password'] = "";
 
@@ -6167,7 +6167,7 @@ JAVASCRIPT;
      *
      * @return string
      */
-    public static function getThumbnailURLForPicture(string $picture = null)
+    public static function getThumbnailURLForPicture(?string $picture = null)
     {
         /** @var array $CFG_GLPI */
         global $CFG_GLPI;
@@ -6725,8 +6725,6 @@ JAVASCRIPT;
             case Entity::ANONYMIZE_USE_NICKNAME_USER:
                 return $this->fields['nickname'];
         }
-
-        return null;
     }
 
     /**
@@ -6757,8 +6755,6 @@ JAVASCRIPT;
 
                 return $user->fields['nickname'] ?? '';
         }
-
-        return null;
     }
 
     /**

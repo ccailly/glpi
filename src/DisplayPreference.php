@@ -85,7 +85,6 @@ class DisplayPreference extends CommonDBTM
                 echo '<div class="alert alert-info">' . $msg . '<br>' . $msg2 . '</div>';
                 echo Html::submit(_x('button', 'Post'), ['name' => 'massiveaction']);
                 return true;
-                break;
         }
         return parent::showMassiveActionsSubForm($ma);
     }
@@ -509,8 +508,8 @@ class DisplayPreference extends CommonDBTM
      * starting from the position before the item which we want to get the group name.
      * The first key of string type we encouter, is our item's group name.
      *
-     * @param array $searchopt
-     * @param int   $searchoptkey
+     * @param array $search_options
+     * @param int   $search_option_key
      *
      * @return string Return the name of the group or an empty string.
      *
@@ -637,6 +636,7 @@ class DisplayPreference extends CommonDBTM
                 return true;
 
             case __CLASS__:
+                /** @var DisplayPreference $item */
                 switch ($tabnum) {
                     case 1:
                         $item->showFormGlobal($_GET["displaytype"]);

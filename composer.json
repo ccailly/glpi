@@ -31,7 +31,7 @@
         "ext-zlib": "*",
         "apereo/phpcas": "^1.6",
         "bacon/bacon-qr-code": "^3.0",
-        "donatj/phpuseragentparser": "^1.8",
+        "donatj/phpuseragentparser": "^1.9",
         "egulias/email-validator": "^4.0",
         "elvanto/litemoji": "^5.0",
         "gettext/languages": "^2.10",
@@ -65,7 +65,7 @@
         "sabre/http": "^5.1",
         "sabre/uri": "^2.3",
         "sabre/vobject": "^4.5",
-        "scssphp/scssphp": "^1.12",
+        "scssphp/scssphp": "^1.13",
         "sebastian/diff": "^6.0",
         "simplepie/simplepie": "^1.8",
         "symfony/cache": "^6.4",
@@ -81,7 +81,7 @@
         "symfony/http-foundation": "^6.4",
         "symfony/http-kernel": "^6.4",
         "symfony/mailer": "^6.4",
-        "symfony/mime": "^6.3",
+        "symfony/mime": "^6.4",
         "symfony/polyfill-ctype": "^1.30",
         "symfony/polyfill-iconv": "^1.30",
         "symfony/polyfill-mbstring": "^1.30",
@@ -95,7 +95,7 @@
         "twig/string-extra": "^3.10",
         "twig/twig": "^3.8",
         "wapmorgan/unified-archive": "^1.2",
-        "webonyx/graphql-php": "^15.12"
+        "webonyx/graphql-php": "^15.13"
     },
     "require-dev": {
         "ext-xml": "*",
@@ -166,7 +166,8 @@
     "autoload-dev": {
         "psr-4": {
             "Glpi\\Tools\\": "tools/src/",
-            "Glpi\\Tests\\": "tests/src/"
+            "Glpi\\Tests\\": "tests/src/",
+            "Glpi\\PHPUNit\\Tests\\": "phpunit/src/"
         },
         "files": ["tests/src/autoload/functions.php"]
     },
@@ -194,7 +195,7 @@
             "patch -f -p1 -d vendor/guzzlehttp/guzzle/ < tools/patches/guzzle-http-client-restrict-http-methods.patch || true"
         ],
         "build": [
-            "bin/console dependencies install && bin/console locales:compile"
+            "bin/console dependencies install"
         ]
     }
 }

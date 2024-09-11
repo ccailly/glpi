@@ -649,7 +649,7 @@ class DBConnection extends CommonDBTM
     /**
      *  Get history max date of a GLPI DB
      *
-     * @param DBMysql $DBconnection DB connection used
+     * @param DBmysql $DBconnection DB connection used
      *
      * @return int|mixed|null
      */
@@ -873,7 +873,6 @@ class DBConnection extends CommonDBTM
                 break;
             default:
                 throw new \Exception(sprintf('Charset "%s" is not supported.', $charset));
-            break;
         }
     }
 

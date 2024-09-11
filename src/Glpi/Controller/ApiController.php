@@ -34,7 +34,7 @@
 
 namespace Glpi\Controller;
 
-use Glpi\Api\HL\Controller\AbstractController;
+use Glpi\Api\HL\Controller\AbstractController as ApiAbstractController;
 use Glpi\Api\HL\Router;
 use Glpi\Application\ErrorHandler;
 use Glpi\Http\JSONResponse;
@@ -46,7 +46,7 @@ use Symfony\Component\HttpFoundation\Response as SymfonyResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 
-final readonly class ApiController implements Controller
+final class ApiController extends AbstractController
 {
     #[Route(
         "/api.php{request_parameters}",
@@ -86,16 +86,18 @@ final readonly class ApiController implements Controller
         }
 
         $supported_versions = Router::getAPIVersions();
-        if (preg_match('/^\/v\d+(\/|$)/', $relative_uri)) {
-            // A specific API version has been requested
-            //TODO Plan handling endpoints with specific versions
-            // For now, just remove the version prefix from the URI
-            $relative_uri = preg_replace('/^\/v\d+(\/|$)/', '/', $relative_uri);
+        // Extract the requested API version (if any) and then remove it from the URI
+        $version = Router::API_VERSION;
+        if (preg_match('/^\/v(\d+(?:\.\d+)*)\//', $relative_uri, $matches)) {
+            $version = $matches[1];
+            $relative_uri = preg_replace('/^\/v\d+(?:\.\d+)*\//', '/', $relative_uri);
         }
+        $version = Router::normalizeAPIVersion($version);
 
         $body = file_get_contents('php://input') ?? null;
 
         $headers = getallheaders() ?? [];
+        $headers['GLPI-API-Version'] = $version;
         $request = new Request($method, $relative_uri, $headers, $body);
 
         $router = Router::getInstance();
@@ -105,8 +107,8 @@ final readonly class ApiController implements Controller
             $response->send();
         } catch (\InvalidArgumentException $e) {
             $response = new JSONResponse(
-                AbstractController::getErrorResponseBody(
-                    AbstractController::ERROR_INVALID_PARAMETER,
+                ApiAbstractController::getErrorResponseBody(
+                    ApiAbstractController::ERROR_INVALID_PARAMETER,
                     $e->getMessage()
                 ),
                 400

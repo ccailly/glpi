@@ -69,6 +69,7 @@ The present file will list all changes made to the project; according to the
 - Testing LDAP replicates now shows results as toast notifications rather than inside the replicate tab after a page reload.
 - The debug tab that was present, for some items, when the debug mode was active, no longer exists. The corresponding features have been either moved, either removed.
 - `Group` and `Group in charge` fields for assets may now contain multiple groups.
+- "If software are no longer used" transfer option is now taken into account rather than always preserving.
 
 ### Deprecated
 - Survey URL tags `TICKETCATEGORY_ID` and `TICKETCATEGORY_NAME` are deprecated and replaced by `ITILCATEGORY_ID` and `ITILCATEGORY_NAME` respectively.
@@ -166,6 +167,39 @@ The present file will list all changes made to the project; according to the
   If reading directly from the DB, you need to query the new linking table `glpi_groups_items`.
 - `Group::getDataItems()` signature changed. The two first parameters `$types` and `$field` were replaced
   by a unique boolean `$tech` parameter that is used to compute the `$types` and `$field` values automatically.
+- `CartridgeItem::addCompatibleType()` method is now static.
+- `Transfer` class is now final.
+- `Transfer::addNotToBeTransfer()` method is now private.
+- `Transfer::addToAlreadyTransfer()` method is now private.
+- `Transfer::addToBeTransfer()` method is now private.
+- `Transfer::cleanSoftwareVersions()` method is now private.
+- `Transfer::copySingleSoftware()` method is now private.
+- `Transfer::copySingleVersion()` method is now private.
+- `Transfer::simulateTransfer()` method is now private.
+- `Transfer::transferAffectedLicense()` method is now private.
+- `Transfer::transferCertificates()` method is now private.
+- `Transfer::transferCompatiblePrinters()` method is now private.
+- `Transfer::transferContracts()` method is now private.
+- `Transfer::transferDevices()` method is now private.
+- `Transfer::transferDirectConnection()` method is now private.
+- `Transfer::transferDocuments()` method is now private.
+- `Transfer::transferDropdownLocation()` method is now private.
+- `Transfer::transferDropdownSocket()` method is now private.
+- `Transfer::transferHelpdeskAdditionalInformations()` method is now private.
+- `Transfer::transferHistory()` method is now private.
+- `Transfer::transferInfocoms()` method is now private.
+- `Transfer::transferItem()` method is now private.
+- `Transfer::transferItem_Disks()` method is now private.
+- `Transfer::transferItemSoftwares()` method is now private.
+- `Transfer::transferLinkedSuppliers()` method is now private.
+- `Transfer::transferNetworkLink()` method is now private.
+- `Transfer::transferPrinterCartridges()` method is now private.
+- `Transfer::transferReservations()` method is now private.
+- `Transfer::transferSingleSupplier()` method is now private.
+- `Transfer::transferSoftwareLicensesAndVersions()` method is now private.
+- `Transfer::transferSupplierContacts()` method is now private.
+- `Transfer::transferTaskCategory()` method is now private.
+- `Transfer::transferTickets()` method is now private.
 
 #### Deprecated
 - Usage of `MAIL_SMTPSSL` and `MAIL_SMTPTLS` constants.
@@ -181,6 +215,7 @@ The present file will list all changes made to the project; according to the
 - Usage of `verbatim_value` Twig filter.
 - `js/Forms/FaIconSelector.js` and therefore `window.GLPI.Forms.FaIconSelector` has been deprecated and replaced by `js/modules/Form/WebIconSelector.js`
 - `linkuser_types`, `linkgroup_types`, `linkuser_tech_types`, `linkgroup_tech_types` configuration entries have been merged in a unique `assignable_types` configuration entry.
+- Usage of the `front/dropdown.common.php` and the `dropdown.common.form.php` files. There is now a generic controller that will serve the search and form pages of any `Dropdown` class.
 - `Auth::getErr()`
 - `AuthLDAP::dropdownUserDeletedActions()`
 - `AuthLDAP::getOptions()`
@@ -420,6 +455,7 @@ The present file will list all changes made to the project; according to the
 - `SLM::setTicketCalendar()`
 - `SoftwareLicense::getSonsOf()`
 - `SoftwareLicense::showDebug()`
+- `Transfer::$inittype` property.
 - `Ticket::showDebug()`
 - `Ticket_Ticket::checkParentSon()`
 - `Ticket_Ticket::countOpenChildren()`
@@ -463,6 +499,7 @@ The present file will list all changes made to the project; according to the
 ### Added
 
 ### Changed
+- Searching IDs in dropdowns now matches the beginning of the ID instead of anywhere in the ID.
 
 ### Deprecated
 

@@ -33,7 +33,7 @@
  * ---------------------------------------------------------------------
  */
 
-/** @var $this \Glpi\Controller\LegacyFileLoadController */
+/** @var \Glpi\Controller\LegacyFileLoadController $this */
 $this->setAjax();
 
 // Send UTF8 Headers
@@ -63,6 +63,7 @@ if (
     die();
 }
 
+/** @var class-string<CommonGLPI> $itemtype */
 $itemtype = $_REQUEST['itemtype'];
 $params = $_REQUEST['params'];
 

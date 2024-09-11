@@ -36,6 +36,7 @@
 namespace Glpi\Tests;
 
 use Glpi\Form\AccessControl\FormAccessControl;
+use Glpi\Form\AnswersHandler\AnswersHandler;
 use Glpi\Form\Comment;
 use Glpi\Form\Destination\FormDestination;
 use Glpi\Form\Form;
@@ -43,6 +44,8 @@ use Glpi\Form\Question;
 use Glpi\Form\Section;
 use Glpi\Form\Tag\Tag;
 use Glpi\Tests\FormBuilder;
+use Ticket;
+use User;
 
 /**
  * Helper trait to tests helpdesk form related features
@@ -70,12 +73,14 @@ trait FormTesterTrait
             '_do_not_init_sections' => true, // We will handle sections ourselves
         ]);
 
+        $section_rank = 0;
         foreach ($builder->getSections() as $section_data) {
             // Create section
             $section = $this->createItem(Section::class, [
                 'forms_forms_id' => $form->getID(),
                 'name'           => $section_data['name'],
                 'description'    => $section_data['description'],
+                'rank'           => $section_rank++,
             ]);
 
             // Create questions
@@ -87,6 +92,8 @@ trait FormTesterTrait
                     'is_mandatory'      => $question_data['is_mandatory'],
                     'default_value'     => $question_data['default_value'],
                     'extra_data'        => $question_data['extra_data'],
+                ], [
+                    'default_value', // The default value can be formatted by the question type
                 ]);
             }
 
@@ -329,5 +336,39 @@ trait FormTesterTrait
         ]);
 
         return $comment;
+    }
+
+    protected function sendFormAndGetCreatedTicket(
+        Form $form, // We assume $form has a single "Ticket" destination
+        array $answers = [],
+    ): Ticket {
+        // The provider use a simplified answer format to be more readable.
+        // Rewrite answers into expected format.
+        $formatted_answers = [];
+        foreach ($answers as $question => $answer) {
+            $key = $this->getQuestionId($form, $question);
+            if (is_numeric($answer)) {
+                // Real answer will be decoded as string by default
+                $answer = (string) $answer;
+            }
+            $formatted_answers[$key] = $answer;
+        }
+
+        // Submit form
+        $answers_handler = AnswersHandler::getInstance();
+        $answers = $answers_handler->saveAnswers(
+            $form,
+            $formatted_answers,
+            getItemByTypeName(User::class, TU_USER, true)
+        );
+
+        // Get created ticket
+        $created_items = $answers->getCreatedItems();
+        $this->assertCount(1, $created_items);
+
+        /** @var Ticket $ticket */
+        $ticket = current($created_items);
+        $this->assertInstanceOf(Ticket::class, $ticket);
+        return $ticket;
     }
 }

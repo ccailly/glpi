@@ -37,11 +37,17 @@ namespace Glpi\Form\Export\Serializer;
 
 use Entity;
 use Glpi\Form\Export\Context\DatabaseMapper;
+use Glpi\Form\Export\Result\ExportResult;
 use Glpi\Form\Export\Result\ImportError;
 use Glpi\Form\Export\Result\ImportResult;
+use Glpi\Form\Export\Result\ImportResultPreview;
 use Glpi\Form\Export\Specification\ExportContentSpecification;
 use Glpi\Form\Export\Specification\FormContentSpecification;
+use Glpi\Form\Export\Specification\SectionContentSpecification;
 use Glpi\Form\Form;
+use Glpi\Form\Section;
+use RuntimeException;
+use Session;
 
 final class FormSerializer extends AbstractFormSerializer
 {
@@ -50,8 +56,8 @@ final class FormSerializer extends AbstractFormSerializer
         return 1;
     }
 
-    /** @property Form[] $forms */
-    public function exportFormsToJson(array $forms): string
+    /** @param array<Form> $forms */
+    public function exportFormsToJson(array $forms): ExportResult
     {
         $export_specification = new ExportContentSpecification();
         $export_specification->version = $this->getVersion();
@@ -62,13 +68,43 @@ final class FormSerializer extends AbstractFormSerializer
             $export_specification->addForm($form_spec);
         }
 
-        return $this->serialize($export_specification);
+        return new ExportResult(
+            filename: $this->computeJsonFileName($forms),
+            json_content: $this->serialize($export_specification),
+        );
     }
 
-    /** @return Form[] */
+    public function previewImport(
+        string $json,
+        DatabaseMapper $mapper,
+    ): ImportResultPreview {
+        $export_specification = $this->deserialize($json);
+
+        // Validate version
+        if ($export_specification->version !== $this->getVersion()) {
+            throw new \InvalidArgumentException("Unsupported version");
+        }
+
+        // Validate each forms
+        $results = new ImportResultPreview();
+        foreach ($export_specification->forms as $form_spec) {
+            $requirements = $form_spec->data_requirements;
+            $mapper->mapExistingItemsForRequirements($requirements);
+
+            $form_name = $form_spec->name;
+            if ($mapper->validateRequirements($requirements)) {
+                $results->addValidForm($form_name);
+            } else {
+                $results->addInvalidForm($form_name);
+            }
+        }
+
+        return $results;
+    }
+
     public function importFormsFromJson(
         string $json,
-        DatabaseMapper $context = new DatabaseMapper(),
+        DatabaseMapper $mapper,
     ): ImportResult {
         $export_specification = $this->deserialize($json);
 
@@ -81,9 +117,9 @@ final class FormSerializer extends AbstractFormSerializer
         $result = new ImportResult();
         foreach ($export_specification->forms as $form_spec) {
             $requirements = $form_spec->data_requirements;
-            $context->loadExistingContextForRequirements($requirements);
+            $mapper->mapExistingItemsForRequirements($requirements);
 
-            if (!$context->validateRequirements($requirements)) {
+            if (!$mapper->validateRequirements($requirements)) {
                 $result->addFailedFormImport(
                     $form_spec->name,
                     ImportError::MISSING_DATA_REQUIREMENT
@@ -91,24 +127,48 @@ final class FormSerializer extends AbstractFormSerializer
                 continue;
             }
 
-            $form = $this->importFormFromSpec($form_spec, $context);
+            $form = $this->importFormFromSpec($form_spec, $mapper);
             $result->addImportedForm($form);
         }
 
         return $result;
     }
 
+    /** @param array<Form> $forms */
+    private function computeJsonFileName(array $forms): string
+    {
+        $date = Session::getCurrentDate();
+
+        if (count($forms) === 1) {
+            $form = current($forms);
+            $formatted_name = \Toolbox::slugify($form->fields['name']);
+            $filename = "$formatted_name-$date";
+        } else {
+            // When exporting multiple forms, we compute an additionnal checksum
+            // to make sure two different exports with the same number of forms
+            // have a different file name.
+            $ids = array_map(fn (Form $form) => $form->getID(), $forms);
+            $checksum = crc32(json_encode($ids));
+
+            $nb = count($forms);
+            $filename = "export-of-$nb-forms-$date-$checksum";
+        }
+
+        return $filename . ".json";
+    }
+
     private function exportFormToSpec(Form $form): FormContentSpecification
     {
-        // TODO: questions, sections, ...
+        // TODO: questions, ...
         $form_spec = $this->exportBasicFormProperties($form);
+        $form_spec = $this->exportSections($form, $form_spec);
 
         return $form_spec;
     }
 
     private function importFormFromSpec(
         FormContentSpecification $form_spec,
-        DatabaseMapper $mapper = new DatabaseMapper(),
+        DatabaseMapper $mapper,
     ): Form {
         /** @var \DBmysql $DB */
         global $DB;
@@ -128,10 +188,11 @@ final class FormSerializer extends AbstractFormSerializer
 
     private function doImportFormFormSpecs(
         FormContentSpecification $form_spec,
-        DatabaseMapper $mapper = new DatabaseMapper(),
+        DatabaseMapper $mapper,
     ): Form {
-        // TODO: questions, sections, ...
+        // TODO: questions, ...
         $form = $this->importBasicFormProperties($form_spec, $mapper);
+        $form = $this->importSections($form, $form_spec);
 
         return $form;
     }
@@ -141,7 +202,7 @@ final class FormSerializer extends AbstractFormSerializer
     ): FormContentSpecification {
         $spec               = new FormContentSpecification();
         $spec->name         = $form->fields['name'];
-        $spec->header       = $form->fields['header'];
+        $spec->header       = $form->fields['header'] ?? "";
         $spec->is_recursive = $form->fields['is_recursive'];
 
         $entity = Entity::getById($form->fields['entities_id']);
@@ -153,24 +214,63 @@ final class FormSerializer extends AbstractFormSerializer
 
     private function importBasicFormProperties(
         FormContentSpecification $spec,
-        DatabaseMapper $mapper = new DatabaseMapper(),
+        DatabaseMapper $mapper,
     ): Form {
-        if (!($spec instanceof FormContentSpecification)) {
-            throw new \InvalidArgumentException("Unsupported version");
-        }
-
         // Get ids from mapper
         $entities_id = $mapper->getItemId(Entity::class, $spec->entity_name);
 
         $form = new Form();
         $id = $form->add([
-            'name'         => $spec->name,
-            'header'       => $spec->header,
-            'entities_id'  => $entities_id,
-            'is_recursive' => $spec->is_recursive,
+            'name'                  => $spec->name,
+            'header'                => $spec->header,
+            'entities_id'           => $entities_id,
+            'is_recursive'          => $spec->is_recursive,
+            '_do_not_init_sections' => true,
         ]);
-        $form->getFromDB($id);
+        if (!$form->getFromDB($id)) {
+            throw new RuntimeException("Failed to create form");
+        }
 
+        return $form;
+    }
+
+    private function exportSections(
+        Form $form,
+        FormContentSpecification $form_spec,
+    ): FormContentSpecification {
+        foreach ($form->getSections() as $section) {
+            $section_spec = new SectionContentSpecification();
+            $section_spec->name = $section->fields['name'];
+            $section_spec->rank = $section->fields['rank'];
+            $section_spec->description = $section->fields['description'] ?? "";
+
+            $form_spec->sections[] = $section_spec;
+        }
+
+        return $form_spec;
+    }
+
+    private function importSections(
+        Form $form,
+        FormContentSpecification $form_spec,
+    ): Form {
+        /** @var SectionContentSpecification $section_spec */
+        foreach ($form_spec->sections as $section_spec) {
+            $section = new Section();
+            $id = $section->add([
+                'name'        => $section_spec->name,
+                'description' => $section_spec->description,
+                'rank'        => $section_spec->rank,
+                Form::getForeignKeyField() => $form->fields['id'],
+            ]);
+
+            if (!$id) {
+                throw new RuntimeException("Failed to create section");
+            }
+        };
+
+        // Reload to clear lazy loaded data
+        $form->getFromDB($form->getId());
         return $form;
     }
 }

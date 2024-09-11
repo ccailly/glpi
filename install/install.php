@@ -418,6 +418,7 @@ function step7()
 function step8()
 {
     include_once(GLPI_CONFIG_DIR . "/config_db.php");
+    /** @var DBmysql $DB */
     $DB = new DB();
 
     if (isset($_POST['send_stats'])) {
@@ -535,7 +536,6 @@ function checkConfigFile()
     }
 
     Html::redirect($CFG_GLPI['root_doc'] . "/index.php");
-    die();
 }
 
 if (!isset($_SESSION['can_process_install']) || !isset($_POST["install"])) {

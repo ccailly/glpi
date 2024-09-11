@@ -45,14 +45,6 @@ interface QuestionTypeInterface
     public function __construct();
 
     /**
-     * Load the required JS files for this question type.
-     * This method is called when the form editor page is loaded.
-     *
-     * @return array List of JS files to load.
-     */
-    public function loadJavascriptFiles(): array;
-
-    /**
      * Format the default value for the database.
      * This method is called before saving the question.
      *
@@ -139,7 +131,17 @@ interface QuestionTypeInterface
      *
      * @return string
      */
-    public function renderAnswerTemplate($answer): string;
+    public function renderAnswerTemplate(mixed $answer): string;
+
+    /**
+     * Format the given answer.
+     * This method is used to format the answer to display.
+     *
+     * @param mixed $answer Given raw answer data.
+     *
+     * @return string
+     */
+    public function formatRawAnswer(mixed $answer): string;
 
     /**
      * Get the name of this questions type.

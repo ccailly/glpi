@@ -42,6 +42,9 @@ final class FormContentSpecification
     public string $entity_name;
     public bool $is_recursive;
 
+    /** @var SectionContentSpecification[] $sections */
+    public array $sections = [];
+
     /** @var DataRequirementSpecification[] $data_requirements */
     public array $data_requirements = [];
 

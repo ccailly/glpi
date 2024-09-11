@@ -3077,25 +3077,33 @@ abstract class CommonITILObject extends CommonDBTM
             $input["date"] = $_SESSION["glpi_currenttime"];
         }
 
-        if (isset($input["status"]) && in_array($input["status"], $this->getSolvedStatusArray())) {
-            if (isset($input["date"])) {
+        if (in_array($input["status"], $this->getSolvedStatusArray())) {
+            if (
+                !isset($input["solvedate"])
+                || $input["solvedate"] < $input["date"]
+            ) {
                 $input["solvedate"] = $input["date"];
-            } else {
-                $input["solvedate"] = $_SESSION["glpi_currenttime"];
             }
         }
 
-        if (isset($input["status"]) && in_array($input["status"], $this->getClosedStatusArray())) {
-            if (isset($input["date"])) {
+        if (in_array($input["status"], $this->getClosedStatusArray())) {
+            if (
+                !isset($input["closedate"])
+                || $input["closedate"] < $input["date"]
+            ) {
                 $input["closedate"] = $input["date"];
-            } else {
-                $input["closedate"] = $_SESSION["glpi_currenttime"];
             }
-            $input['solvedate'] = $input["closedate"];
+            if (
+                !isset($input["solvedate"])
+                || $input["solvedate"] < $input["date"]
+                || $input["solvedate"] > $input["closedate"]
+            ) {
+                $input['solvedate'] = $input["closedate"];
+            }
         }
 
-       // Set begin waiting time if status is waiting
-        if (isset($input["status"]) && ($input["status"] == self::WAITING)) {
+        // Set begin waiting time if status is waiting
+        if ($input["status"] == self::WAITING) {
             $input['begin_waiting_date'] = $input['date'];
         }
 
@@ -4161,7 +4169,6 @@ abstract class CommonITILObject extends CommonDBTM
                 echo "<br><br>";
                 echo Html::submit(_x('button', 'Post'), ['name' => 'massiveaction']);
                 return true;
-            return true;
         }
         return parent::showMassiveActionsSubForm($ma);
     }
@@ -4767,6 +4774,30 @@ abstract class CommonITILObject extends CommonDBTM
         }
         $tab[] = $newtab;
 
+        $tab[] = [
+            'id'                 => '500',
+            'table'              => 'glpi_usercategories',
+            'field'              => 'name',
+            'datatype'           => 'dropdown',
+            'name'               => _n('Requester category', 'Requester categories', 1),
+            'forcegroupby'       => true,
+            'massiveaction'      => false,
+            'joinparams'         => [
+                'beforejoin'         => [
+                    'table'              => 'glpi_users',
+                    'joinparams'         => [
+                        'beforejoin'         => [
+                            'table'              => getTableForItemType($this->userlinkclass),
+                            'joinparams'         => [
+                                'jointype'           => 'child',
+                                'condition'          => ['NEWTABLE.type' => CommonITILActor::REQUESTER]
+                            ]
+                        ],
+                    ]
+                ]
+            ]
+        ];
+
         $newtab = [
             'id'                 => '71',  // Also in Group_Ticket::post_addItem() and Log::getHistoryData()
             'table'              => 'glpi_groups',
@@ -4842,6 +4873,30 @@ abstract class CommonITILObject extends CommonDBTM
         ];
 
         $tab[] = [
+            'id'                 => '501',
+            'table'              => 'glpi_usercategories',
+            'field'              => 'name',
+            'datatype'           => 'dropdown',
+            'name'               => _n('Observer category', 'Observer categories', 1),
+            'forcegroupby'       => true,
+            'massiveaction'      => false,
+            'joinparams'         => [
+                'beforejoin'         => [
+                    'table'              => 'glpi_users',
+                    'joinparams'         => [
+                        'beforejoin'         => [
+                            'table'              => getTableForItemType($this->userlinkclass),
+                            'joinparams'         => [
+                                'jointype'           => 'child',
+                                'condition'          => ['NEWTABLE.type' => CommonITILActor::OBSERVER]
+                            ]
+                        ],
+                    ]
+                ]
+            ]
+        ];
+
+        $tab[] = [
             'id'                 => '65', // Also in Group_Ticket::post_addItem() and Log::getHistoryData()
             'table'              => 'glpi_groups',
             'field'              => 'completename',
@@ -4900,6 +4955,30 @@ abstract class CommonITILObject extends CommonDBTM
                     'joinparams'         => [
                         'jointype'           => 'child',
                         'condition'          => ['NEWTABLE.type' => CommonITILActor::ASSIGN]
+                    ]
+                ]
+            ]
+        ];
+
+        $tab[] = [
+            'id'                 => '502',
+            'table'              => 'glpi_usercategories',
+            'field'              => 'name',
+            'datatype'           => 'dropdown',
+            'name'               => _n('Technician category', 'Technician categories', 1),
+            'forcegroupby'       => true,
+            'massiveaction'      => false,
+            'joinparams'         => [
+                'beforejoin'         => [
+                    'table'              => 'glpi_users',
+                    'joinparams'         => [
+                        'beforejoin'         => [
+                            'table'              => getTableForItemType($this->userlinkclass),
+                            'joinparams'         => [
+                                'jointype'           => 'child',
+                                'condition'          => ['NEWTABLE.type' => CommonITILActor::ASSIGN]
+                            ]
+                        ],
                     ]
                 ]
             ]
@@ -8618,7 +8697,7 @@ abstract class CommonITILObject extends CommonDBTM
     public function getAssociatedDocumentsCriteria($bypass_rights = false): array
     {
         $task_class = $this->getType() . 'Task';
-        /** @var DBMysql $DB */
+        /** @var DBmysql $DB */
         global $DB; // Used to get subquery results - better performance
 
         $or_crits = [
@@ -9512,7 +9591,6 @@ abstract class CommonITILObject extends CommonDBTM
                 break;
             default:
                 throw new \RuntimeException('Unexpected actor type.');
-                break;
         }
         return $actor;
     }

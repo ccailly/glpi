@@ -1401,7 +1401,7 @@ class Session
      * @param string  $module Module to check
      * @param integer $right  Right to check
      *
-     * @return boolean
+     * @return boolean|int
      **/
     public static function haveRight($module, $right)
     {
@@ -2140,6 +2140,16 @@ class Session
     }
 
     /**
+     * Get actives entities id.
+     *
+     * @return array<int>
+     */
+    public static function getActiveEntities(): array
+    {
+        return $_SESSION['glpiactiveentities'] ?? [];
+    }
+
+    /**
      * Filter given entities ID list to return only these tht are matching current active entities in session.
      *
      * @since 10.0.13
@@ -2293,7 +2303,7 @@ class Session
     }
 
     /**
-     * Helper function to get the date stored in $_SESSION['glpi_currenttime']
+     * Helper function to get the date + time stored in $_SESSION['glpi_currenttime']
      *
      * @return null|string
      */
@@ -2301,6 +2311,16 @@ class Session
     {
         // TODO (11.0 refactoring): replace references to $_SESSION['glpi_currenttime'] by a call to this function
         return $_SESSION['glpi_currenttime'] ?? null;
+    }
+
+    /**
+     * Helper function to get the date stored in $_SESSION['glpi_currenttime']
+     *
+     * @return null|string
+     */
+    public static function getCurrentDate(): ?string
+    {
+        return date('Y-m-d', strtotime(self::getCurrentTime()));
     }
 
     /**

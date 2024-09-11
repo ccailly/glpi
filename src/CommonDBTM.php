@@ -192,6 +192,7 @@ class CommonDBTM extends CommonGLPI
      */
     public $right;
 
+    private static $search_options_cache = [];
 
     /**
      * Return the table used to store this object
@@ -343,10 +344,10 @@ class CommonDBTM extends CommonGLPI
         $item = new static();
 
         foreach ($iter as $row) {
-            if (!isset($row["id"])) {
+            if (!isset($row[static::getIndexName()])) {
                 continue;
             }
-            if ($item->getFromDB($row["id"])) {
+            if ($item->getFromDB($row[static::getIndexName()])) {
                 yield $item;
             }
         }
@@ -366,7 +367,8 @@ class CommonDBTM extends CommonGLPI
         /** @var \DBmysql $DB */
         global $DB;
 
-        $crit = ['SELECT' => 'id',
+        $crit = [
+            'SELECT' => static::getIndexName(),
             'FROM'   => static::getTable(),
             'WHERE'  => $crit
         ];
@@ -374,7 +376,7 @@ class CommonDBTM extends CommonGLPI
         $iter = $DB->request($crit);
         if (count($iter) === 1) {
             $row = $iter->current();
-            return $this->getFromDB($row['id']);
+            return $this->getFromDB($row[static::getIndexName()]);
         } else if (count($iter) > 1) {
             trigger_error(
                 sprintf(
@@ -1358,8 +1360,9 @@ class CommonDBTM extends CommonGLPI
                     if (
                         Infocom::canApplyOn($this)
                         && isset($this->input['states_id'])
-                            && (!isset($this->input['is_template'])
-                                || !$this->input['is_template'])
+                        && (!isset($this->input['is_template'])
+                            || !$this->input['is_template'])
+                        && !($this->input['clone'] ?? false)
                     ) {
                         //Check if we have to automatically fill dates
                         Infocom::manageDateOnStatusChange($this);
@@ -2892,7 +2895,7 @@ class CommonDBTM extends CommonGLPI
      *
      * @return boolean
      **/
-    public function can($ID, int $right, array &$input = null): bool
+    public function can($ID, int $right, ?array &$input = null): bool
     {
         if (Session::isInventory()) {
             return true;
@@ -3789,12 +3792,10 @@ class CommonDBTM extends CommonGLPI
      **/
     final public function searchOptions()
     {
-        static $options = [];
-
         $type = $this->getType();
 
-        if (isset($options[$type])) {
-            return $options[$type];
+        if (isset(self::$search_options_cache[$type])) {
+            return self::$search_options_cache[$type];
         }
 
         $options[$type] = [];
@@ -3837,6 +3838,7 @@ class CommonDBTM extends CommonGLPI
             }
         }
 
+        self::$search_options_cache[$type] = $options[$type];
         return $options[$type];
     }
 
@@ -3968,7 +3970,7 @@ class CommonDBTM extends CommonGLPI
         array &$actions,
         $itemtype,
         $is_deleted = false,
-        CommonDBTM $checkitem = null
+        ?CommonDBTM $checkitem = null
     ) {
     }
 
@@ -4709,7 +4711,7 @@ class CommonDBTM extends CommonGLPI
             case '_virtual_datacenter_position':
                 $static = new static();
                 if (method_exists($static, 'renderDcBreadcrumb')) {
-                    //FIXME phpstan-ignore-next-line
+                    /** @var class-string $static */
                     return $static::renderDcBreadcrumb($values['id']);
                 }
         }
@@ -5940,6 +5942,33 @@ TWIG, $twig_params);
     }
 
     /**
+     * Retrieve multiple items from the database
+     *
+     * @param int[] $ids
+     *
+     * @return static[]
+     */
+    public static function getByIds(array $ids): array
+    {
+        $items = [];
+
+        foreach ($ids as $id) {
+            if (!is_numeric($id)) {
+                continue;
+            }
+
+            $item = static::getById((int) $id);
+            if (!$item) {
+                continue;
+            }
+
+            $items[] = $item;
+        }
+
+        return $items;
+    }
+
+    /**
      * Correct entity id if needed when cloning a template
      *
      * @param array   $data
@@ -6693,5 +6722,10 @@ TWIG, $twig_params);
     public static function getSystemSQLCriteria(?string $tablename = null): array
     {
         return [];
+    }
+
+    public static function clearSearchOptionCache(): void
+    {
+        self::$search_options_cache = [];
     }
 }

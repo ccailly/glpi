@@ -236,8 +236,8 @@ final class DbUtils
         }
 
         // handle PHPUnit mocks
-        if (str_starts_with($table, 'mock_')) {
-            $table = preg_replace('/^mock_(.+)_.+$/', '$1', $table);
+        if (str_starts_with($table, 'mockobject_')) {
+            $table = preg_replace('/^mockobject_(.+)_.+$/', '$1', $table);
         }
         // handle aoutm mocks
         $table = str_replace(['mock\\', '\\'], ['', '_'], $table);
@@ -367,7 +367,7 @@ final class DbUtils
      *
      * @return string
      */
-    public function fixItemtypeCase(string $itemtype, $root_dir = GLPI_ROOT)
+    public function fixItemtypeCase(string $itemtype, $root_dir = GLPI_ROOT, array $plugins_dirs = PLUGINS_DIRECTORIES)
     {
         /** @var \Psr\SimpleCache\CacheInterface $GLPI_CACHE */
         global $GLPI_CACHE;
@@ -397,8 +397,8 @@ final class DbUtils
 
         $replacements = [];
         if ($context !== 'glpi-core') {
-            // Strip the `GlpiPlugin\\` prefix that is not present in plugins classes path
-            $replacements[NS_PLUG] = '';
+            // Strip the `GlpiPlugin\\MyPlugin` prefix that is not present in plugins classes path
+            $replacements[$namespace] = '';
         }
         $replacements['\\'] = DIRECTORY_SEPARATOR;
         $expected_lc_path = str_ireplace(array_keys($replacements), array_values($replacements), strtolower($itemtype) . '.php');
@@ -412,7 +412,7 @@ final class DbUtils
 
         if ($mapping[$context] !== null && array_key_exists($expected_lc_path, $mapping[$context])) {
             // Return known value, if any
-            return ($context !== 'glpi-core' && $uses_namespace ? NS_PLUG : '') . $mapping[$context][$expected_lc_path];
+            return ($context !== 'glpi-core' && $uses_namespace ? $namespace : '') . $mapping[$context][$expected_lc_path];
         }
 
         if (
@@ -438,27 +438,31 @@ final class DbUtils
 
         // Fetch filenames from "src" directory of context (GLPI core or given plugin).
         $mapping[$context] = [];
-        $srcdir = $root_dir . ($context === 'glpi-core' ? '' : '/plugins/' . $context) . '/src';
-        if (is_dir($srcdir)) {
-            $files_iterator = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($srcdir),
-                RecursiveIteratorIterator::SELF_FIRST
-            );
-            /** @var SplFileInfo $file */
-            foreach ($files_iterator as $file) {
-                if (!$file->isReadable() || !$file->isFile() || '.php' === !$file->getExtension()) {
-                    continue;
-                }
-                $relative_path = str_replace($srcdir . DIRECTORY_SEPARATOR, '', $file->getPathname());
-
-                // Store entry into mapping:
-                // - key is the lowercased filepath;
-                // - value is the classname with correct case.
-                $mapping[$context][strtolower($relative_path)] = str_replace(
-                    [DIRECTORY_SEPARATOR, '.php'],
-                    ['\\',                ''],
-                    $relative_path
+        foreach ($plugins_dirs as $plugins_dir) {
+            $srcdir = $context === 'glpi-core'
+                ? $root_dir . '/src'
+                : $plugins_dir . '/' . $context . '/src';
+            if (is_dir($srcdir)) {
+                $files_iterator = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($srcdir),
+                    RecursiveIteratorIterator::SELF_FIRST
                 );
+                /** @var SplFileInfo $file */
+                foreach ($files_iterator as $file) {
+                    if (!$file->isReadable() || !$file->isFile() || '.php' === !$file->getExtension()) {
+                        continue;
+                    }
+                    $relative_path = str_replace($srcdir . DIRECTORY_SEPARATOR, '', $file->getPathname());
+
+                    // Store entry into mapping:
+                    // - key is the lowercased filepath;
+                    // - value is the classname with correct case.
+                    $mapping[$context][strtolower($relative_path)] = str_replace(
+                        [DIRECTORY_SEPARATOR, '.php'],
+                        ['\\',                ''],
+                        $relative_path
+                    );
+                }
             }
         }
 
@@ -467,7 +471,7 @@ final class DbUtils
         $GLPI_CACHE->set($cache_key, $mapping[$context]);
 
         return array_key_exists($expected_lc_path, $mapping[$context])
-            ? ($context !== 'glpi-core' && $uses_namespace ? NS_PLUG : '') . $mapping[$context][$expected_lc_path]
+            ? ($context !== 'glpi-core' && $uses_namespace ? $namespace : '') . $mapping[$context][$expected_lc_path]
             : $itemtype;
     }
 
@@ -529,7 +533,7 @@ final class DbUtils
      * Count the number of elements in a table.
      *
      * @param string|array   $table     table name(s)
-     * @param ?string|?array $condition array of criteria
+     * @param string|array   $condition array of criteria
      *
      * @return integer Number of elements in table
      */
@@ -566,7 +570,7 @@ final class DbUtils
      *
      * @param string|array   $table     table name(s)
      * @param string         $field     field name
-     * @param ?string|?array $condition array of criteria
+     * @param array|string|null          $condition array of criteria
      *
      * @return int nb of elements in table
      */
@@ -638,7 +642,7 @@ final class DbUtils
      * CAUTION TO USE ONLY FOR SMALL TABLES OR USING A STRICT CONDITION
      *
      * @param string         $table    Table name
-     * @param ?string|?array $criteria Request criteria
+     * @param array|string|null          $criteria Request criteria
      * @param boolean        $usecache Use cache (false by default)
      * @param string         $order    Result order (default '')
      *

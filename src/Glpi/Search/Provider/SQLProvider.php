@@ -1589,7 +1589,6 @@ final class SQLProvider implements SearchProviderInterface
                 return [
                     "$table.$field" => $tocheck
                 ];
-                break;
 
             case "glpi_notifications.event":
                 if (in_array($searchtype, ['equals', 'notequals']) && strpos($val, \Search::SHORTSEP)) {
@@ -3492,7 +3491,6 @@ final class SQLProvider implements SearchProviderInterface
                     return [
                         $NAME => [$operator, $val]
                     ];
-                    break;
                 case "count":
                 case "mio":
                 case "number":
@@ -5726,8 +5724,8 @@ final class SQLProvider implements SearchProviderInterface
 
                         $out  = "<a id='$itemtype" . $data[$ID][0]['id'] . "' href=\"" . $link;
                         // Force solution tab if solved
-                        /** @var \CommonITILObject $item */
                         if ($item = getItemForItemtype($itemtype)) {
+                            /** @var \CommonITILObject $item */
                             if (in_array($data[$ID][0]['status'], $item->getSolvedStatusArray())) {
                                 $out .= "&amp;forcetab=$itemtype$2";
                             }
@@ -6286,7 +6284,6 @@ HTML;
                     }
 
                     return $out;
-                    break;
             }
         }
         // Manage items with need group by / group_concat
