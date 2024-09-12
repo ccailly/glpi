@@ -59,25 +59,4 @@ enum RequestSourceFieldStrategy: string
             self::SPECIFIC_VALUE => $config->getSpecificRequestSource(),
         };
     }
-
-    private function getRequestSourceForSpecificAnswer(
-        ?int $question_id,
-        AnswersSet $answers_set,
-    ): ?int {
-        if ($question_id === null) {
-            return null;
-        }
-
-        $answer = $answers_set->getAnswerByQuestionId($question_id);
-        if ($answer === null) {
-            return null;
-        }
-
-        $value = $answer->getRawAnswer();
-        if (!is_numeric($value)) {
-            return null;
-        }
-
-        return (int) $value;
-    }
 }
