@@ -96,19 +96,6 @@ final class RequestSourceFieldTest extends DbTestCase
             ]
         );
 
-        $ticket_template = $this->createItem(
-            TicketTemplate::class,
-            ['name' => 'Template 1']
-        );
-        $this->createItem(
-            TicketTemplatePredefinedField::class,
-            [
-                'tickettemplates_id' => $ticket_template->getID(),
-                'num' => 9,
-                'value' => $specified_source,
-            ]
-        );
-
         $created_ticket = $this->checkRequestSourceFieldConfiguration(
             form: $this->createAndGetFormWithTicketDestination(),
             config: new RequestSourceFieldConfig(
