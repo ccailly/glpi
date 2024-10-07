@@ -1620,6 +1620,7 @@ JAVASCRIPT;
         $params['no_sort']             = false;
         $params['aria_label']          = '';
         $params['add_data_attributes'] = '';
+        $params['disabled']            = false;
 
         if (is_array($options) && count($options)) {
             foreach ($options as $key => $val) {
@@ -1650,6 +1651,7 @@ JAVASCRIPT;
                 'width'               => $params['width'],
                 'aria_label'          => $params['aria_label'],
                 'add_data_attributes' => $params['add_data_attributes'],
+                'disabled'            => $params['disabled'],
             ]);
         }
         return 0;
@@ -1746,6 +1748,7 @@ JAVASCRIPT;
             'aria_label'                            => '',
             'specific_tags_items_id_dropdown'       => [],
             'add_data_attributes_itemtype_dropdown' => '',
+            'disabled'                              => false,
         ];
 
         if (is_array($options) && count($options)) {
@@ -1767,6 +1770,7 @@ JAVASCRIPT;
             'no_sort'             => $params['no_sort'],
             'aria_label'          => $params['aria_label'],
             'add_data_attributes' => $params['add_data_attributes_itemtype_dropdown'],
+            'disabled'            => $params['disabled'],
         ]);
 
         $p_ajax = [
@@ -1778,6 +1782,7 @@ JAVASCRIPT;
             'width'                           => $params['width'],
             'container_css_class'             => $params['container_css_class'],
             'specific_tags_items_id_dropdown' => $params['specific_tags_items_id_dropdown'],
+            'disabled'                        => $params['disabled'],
         ];
 
        // manage condition

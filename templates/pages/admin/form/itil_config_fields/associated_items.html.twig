@@ -49,102 +49,16 @@
     data-glpi-specific-values-extra-field
     class="form-field col-12 col-sm-6 mb-2 {% if main_config_field.value != CONFIG_SPECIFIC_VALUES %}d-none{% endif %}"
 >
-    {% set remove_button %}
-        <button type="button" class="btn btn-outline" data-glpi-remove-associated-item-button aria-label="{{ __('Remove item') }}">
-            <i class="fas fa-times"></i>
-        </button>
-    {% endset %}
-
-    <section data-glpi-specific-values-extra-field-container>
-        {% if specific_values_extra_field.associated_items is empty %}
-            {{ fields.dropdownItemsFromItemtypes(
-                specific_values_extra_field.input_name,
-                '',
-                {
-                    'init'               : true,
-                    'itemtypes'          : specific_values_extra_field.itemtypes,
-                    'no_label'           : true,
-                    'display_emptychoice': false,
-                    'itemtype_name'      : specific_values_extra_field.input_name ~ '[itemtype][]',
-                    'items_id_name'      : specific_values_extra_field.input_name ~ '[items_id][]',
-                    'default_itemtype'   : specific_values_extra_field.itemtypes|first,
-                    'width'              : '30%',
-                    'add_field_class'    : 'd-flex input-group flex-nowrap',
-                    'mb'                 : 'mb-2',
-                    'add_field_html'     : remove_button,
-                    'add_field_attribs'  : {
-                        'data-glpi-specific-values-extra-field-item': ''
-                    },
-                    'aria_label'         : specific_values_extra_field.itemtype_aria_label,
-                    'specific_tags_items_id_dropdown': {
-                        'aria-label': specific_values_extra_field.items_id_aria_label,
-                    }
-                }
-            ) }}
-        {% endif %}
-
-        {% for itemtype, items_ids in specific_values_extra_field.associated_items %}
-            {% for items_id in items_ids %}
-                {{ fields.dropdownItemsFromItemtypes(
-                    specific_values_extra_field.input_name,
-                    '',
-                    {
-                        'init'               : true,
-                        'itemtypes'          : specific_values_extra_field.itemtypes,
-                        'no_label'           : true,
-                        'display_emptychoice': false,
-                        'itemtype_name'      : specific_values_extra_field.input_name ~ '[itemtype][]',
-                        'items_id_name'      : specific_values_extra_field.input_name ~ '[items_id][]',
-                        'default_itemtype'   : itemtype,
-                        'default_items_id'   : items_id,
-                        'width'              : '30%',
-                        'add_field_class'    : 'd-flex input-group flex-nowrap',
-                        'mb'                 : 'mb-2',
-                        'add_field_html'     : remove_button,
-                        'add_field_attribs'  : {
-                            'data-glpi-specific-values-extra-field-item': ''
-                        },
-                        'aria_label'         : specific_values_extra_field.itemtype_aria_label,
-                        'specific_tags_items_id_dropdown': {
-                            'aria-label': specific_values_extra_field.items_id_aria_label,
-                        }
-                    }
-                ) }}
-            {% endfor %}
-        {% endfor %}
-    </section>
-
-    <button type="button" class="btn btn-outline" data-glpi-add-associated-item-button aria-label="{{ __('Add item') }}">
-        <i class="ti ti-plus me-2"></i>
-        {{ __('Add item') }}
-    </button>
-
-    <template class="d-none" data-glpi-specific-values-extra-field-template>
-        {{ fields.dropdownItemsFromItemtypes(
-            specific_values_extra_field.input_name,
-            '',
-            {
-                'init'                           : false,
-                'itemtypes'                      : specific_values_extra_field.itemtypes,
-                'no_label'                       : true,
-                'display_emptychoice'            : false,
-                'itemtype_name'                  : specific_values_extra_field.input_name ~ '[itemtype][]',
-                'items_id_name'                  : specific_values_extra_field.input_name ~ '[items_id][]',
-                'default_itemtype'               : 'Computer',
-                'width'                          : '30%',
-                'add_field_class'                : 'd-flex input-group flex-nowrap',
-                'mb'                             : 'mb-2',
-                'add_field_html'                 : remove_button,
-                'add_field_attribs'              : {
-                    'data-glpi-specific-values-extra-field-item': ''
-                },
-                'aria_label'         : specific_values_extra_field.itemtype_aria_label,
-                'specific_tags_items_id_dropdown': {
-                    'aria-label': specific_values_extra_field.items_id_aria_label,
-                }
-            }
-        ) }}
-    </template>
+    {{ fields.dropdownAssociatedItems(
+        specific_values_extra_field.input_name,
+        specific_values_extra_field.itemtypes,
+        specific_values_extra_field.associated_items ?? [],
+        '',
+        {
+            'no_label': true,
+            'field_class': 'col-12'
+        }
+    ) }}
 </div>
 
 <div
@@ -167,13 +81,3 @@
         })
     ) }}
 </div>
-
-<script>
-    import("{{ js_path('js/modules/Forms/FieldDestinationAssociatedItem.js') }}").then((m) => {
-        new m.GlpiFormFieldDestinationAssociatedItem(
-            $('[data-glpi-specific-values-extra-field]'),
-            '{{ specific_values_extra_field.input_name ~ "[itemtype][]" }}',
-            '{{ specific_values_extra_field.input_name ~ "[items_id][]" }}'
-        );
-    });
-</script>

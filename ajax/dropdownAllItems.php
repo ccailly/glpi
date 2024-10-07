@@ -98,6 +98,9 @@ if ($_POST["idtable"] && class_exists($_POST["idtable"])) {
     if (isset($_POST['specific_tags_items_id_dropdown'])) {
         $p['specific_tags'] = $_POST['specific_tags_items_id_dropdown'];
     }
+    if (isset($_POST['disabled'])) {
+        $p['disabled'] = filter_var($_POST['disabled'], FILTER_VALIDATE_BOOLEAN);
+    }
     $p['_idor_token'] = Session::getNewIDORToken($_POST["idtable"], $idor_params);
 
     echo  Html::jsAjaxDropdown(

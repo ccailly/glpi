@@ -31,8 +31,8 @@
  * ---------------------------------------------------------------------
  */
 
-[data-glpi-specific-values-extra-field-container] {
-    [data-glpi-specific-values-extra-field-item] {
+ [data-glpi-associated-item-container] {
+    [data-glpi-associated-item-item] {
         padding-left: 1px;
 
         >span:last-of-type {
@@ -44,7 +44,7 @@
         }
     }
 
-    .input-group[data-glpi-specific-values-extra-field-item] {
+    .input-group[data-glpi-associated-item-item] {
         >span:first-of-type {
             .select2-selection {
                 border-top-right-radius: 0 !important;
@@ -53,6 +53,13 @@
         }
 
         >span:not(:first-of-type) {
+            .select2-selection {
+                border-top-left-radius: 0 !important;
+                border-bottom-left-radius: 0 !important;
+            }
+        }
+
+        >span:not(:first-of-type):has(+ script + button) {
             .select2-selection {
                 border-radius: 0 !important;
             }

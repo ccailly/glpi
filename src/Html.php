@@ -4571,6 +4571,7 @@ JS;
             'templateSelection'   => 'templateSelection',
             'container_css_class' => '',
             'aria_label'          => '',
+            'disabled'            => false,
         ];
         $params = array_merge($default_options, $params);
 
@@ -4584,6 +4585,7 @@ JS;
         $templateSelection = $params['templateSelection'];
         $container_css_class = $params['container_css_class'];
         $aria_label = $params['aria_label'];
+        $disabled = $params['disabled'];
         unset($params["on_change"], $params["width"]);
 
         $allowclear =  "false";
@@ -4617,6 +4619,10 @@ JS;
             $params['specific_tags']['aria-label'] = $aria_label;
         }
         unset($params['aria_label']);
+
+        if ($disabled) {
+            $params['specific_tags']['disabled'] = true;
+        }
 
         foreach ($params['specific_tags'] as $tag => $val) {
             if (is_array($val)) {

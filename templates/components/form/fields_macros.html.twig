@@ -702,6 +702,158 @@
    {% endif %}
 {% endmacro %}
 
+{% macro dropdownAssociatedItems(name, helpdesk_itemtypes, values = [], label = '', options = {}) %}
+   {% set options = {
+      'rand'                 : random(),
+      'width'                : '100%',
+      'disabled'             : false,
+      'itemtype_name'        : name ~ '[itemtype][]',
+      'items_id_name'        : name ~ '[items_id][]',
+      'default_itemtype'     : helpdesk_itemtypes|first,
+      'itemtype_aria_label'  : __('Select the itemtype of the item to associate...'),
+      'items_id_aria_label'  : __('Select the item to associate...'),
+      'display_add_button'   : true,
+      'display_remove_button': true,
+   }|merge(options) %}
+
+   {% if options.fields_template.isMandatoryField(name) %}
+      {% set options = {'specific_tags': {'required': true}}|merge(options) %}
+   {% endif %}
+
+   {% if options.fields_template.isReadonlyField(name) %}
+      {% set options = options|merge({'readonly': true}) %}
+   {% endif %}
+
+   {% set remove_button %}
+      {% if options.display_remove_button %}
+         <button
+            type="button"
+            class="btn btn-outline"
+            aria-label="{{ __('Remove item') }}"
+            data-glpi-associated-item-remove-button
+            {% if options.disabled %} disabled {% endif %}
+         >
+            <i class="fas fa-times"></i>
+         </button>
+      {% endif %}
+   {% endset %}
+
+   {% set field %}
+      <section data-glpi-associated-item-container="{{ options.rand }}">
+         {% if values is empty %}
+            {{ _self.dropdownItemsFromItemtypes(
+               name,
+               '',
+               {
+                     'init'               : true,
+                     'disabled'           : options.disabled,
+                     'itemtypes'          : helpdesk_itemtypes,
+                     'no_label'           : true,
+                     'display_emptychoice': false,
+                     'itemtype_name'      : options.itemtype_name,
+                     'items_id_name'      : options.items_id_name,
+                     'default_itemtype'   : options.default_itemtype,
+                     'width'              : '30%',
+                     'add_field_class'    : 'd-flex input-group flex-nowrap',
+                     'mb'                 : 'mb-2',
+                     'add_field_html'     : remove_button,
+                     'add_field_attribs'  : {
+                        'data-glpi-associated-item-item': ''
+                     },
+                     'aria_label'         : options.itemtype_aria_label,
+                     'specific_tags_items_id_dropdown': {
+                        'aria-label': options.items_id_aria_label,
+                     }
+               }
+            ) }}
+         {% endif %}
+
+         {% for itemtype, items_ids in values %}
+            {% for items_id in items_ids %}
+               {{ _self.dropdownItemsFromItemtypes(
+                     name,
+                     '',
+                     {
+                        'init'               : true,
+                        'disabled'           : options.disabled,
+                        'itemtypes'          : helpdesk_itemtypes,
+                        'no_label'           : true,
+                        'display_emptychoice': false,
+                        'itemtype_name'      : options.itemtype_name,
+                        'items_id_name'      : options.items_id_name,
+                        'default_itemtype'   : itemtype,
+                        'default_items_id'   : items_id,
+                        'width'              : '30%',
+                        'add_field_class'    : 'd-flex input-group flex-nowrap',
+                        'mb'                 : 'mb-2',
+                        'add_field_html'     : remove_button,
+                        'add_field_attribs'  : {
+                           'data-glpi-associated-item-item': ''
+                        },
+                        'aria_label'         : options.itemtype_aria_label,
+                        'specific_tags_items_id_dropdown': {
+                           'aria-label': options.items_id_aria_label,
+                        }
+                     }
+               ) }}
+            {% endfor %}
+         {% endfor %}
+
+         {% if options.display_add_button %}
+            <button
+               type="button"
+               class="btn btn-outline"
+               aria-label="{{ __('Add item') }}"
+               data-glpi-associated-item-add-button
+               {% if options.disabled %} disabled {% endif %}
+            >
+               <i class="ti ti-plus me-2"></i>
+               {{ __('Add item') }}
+            </button>
+         {% endif %}
+
+         <template class="d-none" data-glpi-associated-item-template>
+            {{ _self.dropdownItemsFromItemtypes(
+               name,
+               '',
+               {
+                  'init'               : false,
+                  'disabled'           : options.disabled,
+                  'itemtypes'          : helpdesk_itemtypes,
+                  'no_label'           : true,
+                  'display_emptychoice': false,
+                  'itemtype_name'      : options.itemtype_name,
+                  'items_id_name'      : options.items_id_name,
+                  'default_itemtype'   : options.default_itemtype,
+                  'width'              : '30%',
+                  'add_field_class'    : 'd-flex input-group flex-nowrap',
+                  'mb'                 : 'mb-2',
+                  'add_field_html'     : remove_button,
+                  'add_field_attribs'  : {
+                        'data-glpi-associated-item-item': ''
+                  },
+                  'aria_label'         : options.itemtype_aria_label,
+                  'specific_tags_items_id_dropdown': {
+                        'aria-label': options.items_id_aria_label,
+                  }
+               }
+            ) }}
+         </template>
+      </section>
+   {% endset %}
+
+   {{ _self.field(name, field, label, options|merge({'id': 'dropdown_' ~ name|replace({'[': '_', ']': '_'}) ~ options.rand})) }}
+   <script>
+      import("{{ js_path('js/modules/AssociatedItem.js') }}").then((m) => {
+         new m.AssociatedItem(
+               $('[data-glpi-associated-item-container="{{ options.rand }}"]'),
+               '{{ options.itemtype_name }}',
+               '{{ options.items_id_name }}'
+         );
+      });
+   </script>
+{% endmacro %}
+
 {% macro htmlField(name, value, label = '', options = {}) %}
    {% if value|length == 0 %}
       {% set value = '&nbsp;' %}

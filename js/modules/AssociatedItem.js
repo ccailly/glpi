@@ -31,9 +31,9 @@
  * ---------------------------------------------------------------------
  */
 
-/* global tinymce, getUUID, setupAjaxDropdown, setupAdaptDropdown */
+/* global getUUID, setupAjaxDropdown, setupAdaptDropdown */
 
-export class GlpiFormFieldDestinationAssociatedItem {
+export class AssociatedItem {
     /**
      * Name of the itemtype field
      * @type {string}
@@ -50,58 +50,60 @@ export class GlpiFormFieldDestinationAssociatedItem {
      * Container for associated items
      * @type {jQuery<HTMLElement>}
      */
-    #associated_items_container;
+    #container;
 
     /**
      * Template for specific values (jquery selector)
      * @type {jQuery<HTMLElement>}
      */
-    #specific_values_template;
+    #template;
 
     /**
      * Button to add associated items (jquery selector)
      * @type {jQuery<HTMLElement>}
      */
-    #add_associated_item_button;
+    #add_item_button;
 
     /**
-     * @param {jQuery<HTMLElement>} specific_values_extra_field
+     * @param {jQuery<HTMLElement>} container
+     * @param {string} itemtype_name
+     * @param {string} items_id_name
      */
     constructor(
-        specific_values_extra_field,
+        container,
         itemtype_name,
         items_id_name,
     ) {
-        this.#itemtype_name = itemtype_name;
-        this.#items_id_name = items_id_name;
-        this.#associated_items_container = specific_values_extra_field.find('[data-glpi-specific-values-extra-field-container]');
-        this.#specific_values_template = specific_values_extra_field.find('[data-glpi-specific-values-extra-field-template]');
-        this.#add_associated_item_button = specific_values_extra_field.find('[data-glpi-add-associated-item-button]');
+        this.#container        = container;
+        this.#itemtype_name   = itemtype_name;
+        this.#items_id_name   = items_id_name;
+        this.#template        = container.find('[data-glpi-associated-item-template]');
+        this.#add_item_button = container.find('[data-glpi-associated-item-add-button]');
 
-        this.#add_associated_item_button.on('click', () => {
+        this.#add_item_button.on('click', () => {
             this.#addAssociatedItemField();
         });
 
-        this.#associated_items_container.find('[data-glpi-remove-associated-item-button]')
+        this.#container.find('[data-glpi-associated-item-remove-button]')
             .each((index, button) => this.#registerOnRemoveAssociatedItem($(button)));
     }
 
     #addAssociatedItemField() {
         // Clone the template content and append it to the container
-        const template_content = this.#specific_values_template.html();
-        this.#associated_items_container.append(template_content);
+        const template_content = this.#template.html();
+        $(template_content).insertBefore(this.#add_item_button);
 
         // Get the last item added
-        const template = this.#associated_items_container.find('[data-glpi-specific-values-extra-field-item]').last();
+        const template = this.#container.find('div[data-glpi-associated-item-item]').last();
 
         // Initialize dropdowns and register events
         this.#initDropdowns(template);
-        this.#registerOnRemoveAssociatedItem(template.find('[data-glpi-remove-associated-item-button]'));
+        this.#registerOnRemoveAssociatedItem(template.find('[data-glpi-associated-item-remove-button]'));
     }
 
     #registerOnRemoveAssociatedItem(button) {
         button.on('click', () => {
-            button.closest('[data-glpi-specific-values-extra-field-item]').remove();
+            button.closest('[data-glpi-associated-item-item]').remove();
         });
     }
 

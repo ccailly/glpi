@@ -96,8 +96,6 @@ class AssociatedItemsField extends AbstractConfigField
 
             // Specific additional config for SPECIFIC_VALUES strategy
             'specific_values_extra_field' => [
-                'itemtype_aria_label' => __("Select the itemtype of the item to associate..."),
-                'items_id_aria_label' => __("Select the item to associate..."),
                 'input_name'          => $input_name . "[" . AssociatedItemsFieldConfig::ASSOCIATED_ITEMS . "]",
                 'itemtypes'           => array_keys(CommonITILObject::getAllTypesForHelpdesk()),
                 'associated_items'    => $config->getSpecificAssociatedItems(),
