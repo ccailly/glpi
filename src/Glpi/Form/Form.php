@@ -100,6 +100,7 @@ final class Form extends CommonDBTM
         $this->addStandardTab(AnswersSet::getType(), $tabs, $options);
         $this->addStandardTab(FormAccessControl::getType(), $tabs, $options);
         $this->addStandardTab(FormDestination::getType(), $tabs, $options);
+        $this->addStandardTab(FormLogic::getType(), $tabs, $options);
         $this->addStandardTab(Log::getType(), $tabs, $options);
         return $tabs;
     }
