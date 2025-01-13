@@ -33,6 +33,8 @@
  * ---------------------------------------------------------------------
  */
 
+use Glpi\Form\Migration\MigrationManager;
+
 /**
  * @var DBmysql $DB
  * @var Migration $migration
@@ -287,3 +289,6 @@ CronTask::register('Glpi\Form\Form', 'purgedraftforms', DAY_TIMESTAMP, [
     'logs_lifetime' => 30,
     'param'         => 7
 ]);
+
+// Migrate formcreator forms to the new forms system
+(new MigrationManager($DB))->doMigration();
