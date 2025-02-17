@@ -40,8 +40,6 @@ use DbTestCase;
 use Glpi\Form\Category;
 use Glpi\Form\Form;
 use Glpi\Form\Migration\FormMigration;
-use Glpi\Form\Migration\FormMigrationResult;
-use Glpi\Form\Migration\MigrationManager;
 use Glpi\Form\Question;
 use Glpi\Form\QuestionType\QuestionTypeActorsDefaultValueConfig;
 use Glpi\Form\QuestionType\QuestionTypeActorsExtraDataConfig;
@@ -64,6 +62,7 @@ use Glpi\Form\QuestionType\QuestionTypeSelectableExtraDataConfig;
 use Glpi\Form\QuestionType\QuestionTypeShortText;
 use Glpi\Form\QuestionType\QuestionTypeUrgency;
 use Glpi\Form\Section;
+use Glpi\Migration\PluginMigrationResult;
 use Glpi\Tests\FormTesterTrait;
 use Location;
 use PHPUnit\Framework\Assert;
@@ -110,9 +109,14 @@ final class FormMigrationTest extends DbTestCase
     #[DataProvider('provideFormMigrationFormCategories')]
     public function testFormMigrationFormCategories($data): void
     {
-        global $DB;
-        $mm = new MigrationManager($DB);
-        $mm->doMigration(false);
+        /**
+         * @var \DBmysql $DB
+         * LoggerInterface $PHPLOGGER
+         */
+        global $DB, $PHPLOGGER;
+        $migration = new FormMigration($DB, $PHPLOGGER);
+        $this->setPrivateProperty($migration, 'result', new PluginMigrationResult());
+        $this->assertTrue($this->callPrivateMethod($migration, 'processMigration'));
 
         $formCategory = getItemByTypeName(Category::class, $data['name']);
         $this->assertEquals(
@@ -160,9 +164,14 @@ final class FormMigrationTest extends DbTestCase
     #[DataProvider('provideFormMigrationBasicProperties')]
     public function testFormMigrationBasicProperties($data): void
     {
-        global $DB;
-        $mm = new MigrationManager($DB);
-        $mm->doMigration(false);
+        /**
+         * @var \DBmysql $DB
+         * LoggerInterface $PHPLOGGER
+         */
+        global $DB, $PHPLOGGER;
+        $migration = new FormMigration($DB, $PHPLOGGER);
+        $this->setPrivateProperty($migration, 'result', new PluginMigrationResult());
+        $this->assertTrue($this->callPrivateMethod($migration, 'processMigration'));
 
         $form = getItemByTypeName(Form::class, $data['name']);
         $this->assertEquals(
@@ -198,9 +207,14 @@ final class FormMigrationTest extends DbTestCase
     #[DataProvider('provideFormMigrationSections')]
     public function testFormMigrationSections($data): void
     {
-        global $DB;
-        $mm = new MigrationManager($DB);
-        $mm->doMigration(false);
+        /**
+         * @var \DBmysql $DB
+         * LoggerInterface $PHPLOGGER
+         */
+        global $DB, $PHPLOGGER;
+        $migration = new FormMigration($DB, $PHPLOGGER);
+        $this->setPrivateProperty($migration, 'result', new PluginMigrationResult());
+        $this->assertTrue($this->callPrivateMethod($migration, 'processMigration'));
 
         $section = new Section();
         $this->assertNotFalse($section->getFromDBByCrit([
@@ -230,7 +244,7 @@ final class FormMigrationTest extends DbTestCase
                 'type'                        => QuestionTypeRequester::class,
                 'is_mandatory'                => 0,
                 'vertical_rank'               => 0,
-                'horizontal_rank'             => null,
+                'horizontal_rank'             => 2,
                 'description'                 => null,
                 'default_value'               => json_encode($default_value->jsonSerialize()),
                 'extra_data'                  => json_encode($extra_data->jsonSerialize())
@@ -488,9 +502,14 @@ final class FormMigrationTest extends DbTestCase
     #[DataProvider('provideFormMigrationQuestions')]
     public function testFormMigrationQuestions($data): void
     {
-        global $DB;
-        $mm = new MigrationManager($DB);
-        $mm->doMigration(false);
+        /**
+         * @var \DBmysql $DB
+         * LoggerInterface $PHPLOGGER
+         */
+        global $DB, $PHPLOGGER;
+        $migration = new FormMigration($DB, $PHPLOGGER);
+        $this->setPrivateProperty($migration, 'result', new PluginMigrationResult());
+        $this->assertTrue($this->callPrivateMethod($migration, 'processMigration'));
 
         $question = getItemByTypeName(Question::class, $data['name']);
         $this->assertSame(
@@ -504,33 +523,43 @@ final class FormMigrationTest extends DbTestCase
 
     public function testFormMigrationAllExportableQuestionsHaveBeenMigrated(): void
     {
-        global $DB;
-        $mm = new MigrationManager($DB);
-        $mm->doMigration(false);
+        /**
+         * @var \DBmysql $DB
+         * LoggerInterface $PHPLOGGER
+         */
+        global $DB, $PHPLOGGER;
+        $migration = new FormMigration($DB, $PHPLOGGER);
+        $this->setPrivateProperty($migration, 'result', new PluginMigrationResult());
+        $this->assertTrue($this->callPrivateMethod($migration, 'processMigration'));
 
         $form = getItemByTypeName(Form::class, 'Test form migration for questions');
         $this->assertNotFalse($form);
 
         /** @var Form $form */
         $questions = $form->getQuestions();
-        $exportable_questions = array_filter($questions, function ($question) use ($mm) {
+        $exportable_questions = array_filter($questions, function ($question) use ($migration) {
             return in_array(
                 $question->getQuestionType()::class,
-                array_values((new FormMigration($mm, new FormMigrationResult()))->getTypesConvertMap())
+                array_values($migration->getTypesConvertMap())
             );
         });
 
         $this->assertSameSize(
-            array_filter(array_values((new FormMigration($mm, new FormMigrationResult()))->getTypesConvertMap())),
+            array_filter(array_values($migration->getTypesConvertMap())),
             $exportable_questions
         );
     }
 
     public function testFormMigrationQuestionOfTypeDescriptionAsBeenMigratedAsComment(): void
     {
-        global $DB;
-        $mm = new MigrationManager($DB);
-        $mm->doMigration(false);
+        /**
+         * @var \DBmysql $DB
+         * LoggerInterface $PHPLOGGER
+         */
+        global $DB, $PHPLOGGER;
+        $migration = new FormMigration($DB, $PHPLOGGER);
+        $this->setPrivateProperty($migration, 'result', new PluginMigrationResult());
+        $this->assertTrue($this->callPrivateMethod($migration, 'processMigration'));
 
         $form = getItemByTypeName(Form::class, 'Test form migration for questions');
         $this->assertNotFalse($form);

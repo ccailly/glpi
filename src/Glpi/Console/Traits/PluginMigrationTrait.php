@@ -88,10 +88,11 @@ trait PluginMigrationTrait
 
         foreach ($messages as $entry) {
             match ($entry['type']) {
-                MessageType::Error => $output->writeln('<error>x</error>' . $entry['message']),
+                MessageType::Error   => $output->writeln('<error>x</error>' . $entry['message']),
                 MessageType::Warning => $this->outputMessage('<comment>⚠</comment>' . $entry['message']),
                 MessageType::Success => $this->outputMessage('<info>✓</info>' . $entry['message']),
-                MessageType::Notice => $this->outputMessage('🛈' . $entry['message']),
+                MessageType::Notice  => $this->outputMessage('🛈' . $entry['message']),
+                MessageType::Debug   => $this->outputMessage('<fg=black;bg=white>DEBUG</> ' . $entry['message']),
             };
         }
     }
