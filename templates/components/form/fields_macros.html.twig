@@ -302,7 +302,7 @@
 {% macro passwordField(name, value, label = '', options = {}) %}
    {% set options = {
       'id': '%id%',
-      'can_regenerate': options.can_regenerate,
+      'can_regenerate': options.can_regenerate ?? false,
       'clearable': options.clearable is defined ? options.clearable : not options.is_disclosable,
       'is_copyable': options.is_disclosable ?? false
    }|merge(options) %}
@@ -512,6 +512,7 @@
     {% set options = {
         'rand': random(),
         'width': '100%',
+        'disabled': false
     }|merge(options) %}
    {% if options.fields_template.isMandatoryField(name)|default(false) %}
       {% set options = {'required': true}|merge(options) %}
@@ -526,9 +527,7 @@
    {% endif %}
 
    {% set field %}
-      {% do call('Dropdown::showYesNo', [name, value, -1, {
-         'rand': rand,
-      }|merge(options)]) %}
+      {% do call('Dropdown::showYesNo', [name, value, -1, options]) %}
    {% endset %}
 
    {{ _self.field(name, field, label, options|merge({'id': 'dropdown_' ~ name|replace({'[': '_', ']': '_'}) ~ options.rand})) }}
