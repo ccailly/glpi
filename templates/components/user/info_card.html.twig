@@ -53,7 +53,7 @@
          </h4>
 
          <div class="text-muted">
-            {% if user['login'] is not empty %}
+            {% if user.login is defined and user['login'] is not empty %}
                 <div>
                     <i class="ti ti-id-badge"></i>
                     {{ user['login'] }}

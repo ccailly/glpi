@@ -2107,6 +2107,8 @@ JS
         foreach ($check_results as $ID => $criteria_result) {
             $criteria->getFromDB($criteria_result["id"]);
             $entries[] = [
+                'itemtype' => static::class,
+                'id' => $this->fields['id'],
                 'validation' => (int) $criteria->fields['condition'] !== self::PATTERN_FIND ? Dropdown::getYesNo($criteria_result["result"]) : Dropdown::EMPTY_VALUE,
             ] + $this->getMinimalCriteria($criteria->fields);
         }
@@ -2135,6 +2137,8 @@ JS
         $entries = [
             [
                 'action' => __('Validation'),
+                'itemtype' => static::class,
+                'id' => $this->fields['id'],
                 'result' => htmlescape(Dropdown::getYesNo($global_result)),
             ]
         ];
@@ -2160,7 +2164,9 @@ JS
             foreach ($value as $v) {
                 $entries[] = [
                     'action' => $action_def["name"],
-                    'result' => htmlescape($this->getActionValue($action_def_key, $actiontype, $v))
+                    'result' => htmlescape($this->getActionValue($action_def_key, $actiontype, $v)),
+                    'itemtype' => static::class,
+                    'id' => $this->fields['id'],
                 ];
             }
         }
@@ -2178,7 +2184,9 @@ JS
             }
             $entries[] = [
                 'action' => __('Result of the regular expression'),
-                'result' => $regex_results
+                'result' => $regex_results,
+                'itemtype' => static::class,
+                'id' => $this->fields['id'],
             ];
         }
 
