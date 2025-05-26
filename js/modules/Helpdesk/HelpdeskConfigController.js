@@ -78,6 +78,13 @@ export class GlpiHelpdeskConfigController
             })
         ;
 
+        this.#container
+            .querySelector('[data-glpi-helpdesk-config-translate-action')
+            .addEventListener('click', async() => {
+                await this.#showTilesTranslations();
+            })
+        ;
+
         // Watch for tile deletion
         this.#container.addEventListener('click', (e) => {
             const delete_button = e.target.closest(
@@ -419,6 +426,38 @@ export class GlpiHelpdeskConfigController
 
             this.#getTilesContainerDiv().innerHTML = await response.text();
             bootstrap.Offcanvas.getInstance('#tile-form-offcanvas').hide();
+        } catch (e) {
+            glpi_toast_error(__('An unexpected error occurred'));
+            console.error(e);
+        }
+    }
+
+    async #showTilesTranslations()
+    {
+        try {
+            this.#getFormTileLoadingIndicatorDiv().classList.remove('d-none');
+            this.#getFormTileDiv().classList.add('d-none');
+
+            const url = `${CFG_GLPI.root_doc}/Config/Helpdesk/ShowTilesTranslations?`;
+            const response = await fetch(url + new URLSearchParams({
+                itemtype_item: this.#itemtype_item,
+                items_id_item: this.#items_id_item,
+            }));
+
+            // Handle server errors
+            if (!response.ok) {
+                throw new Error(response.status);
+            }
+
+            // Note: we use jQuery instead of raw JS here because we need scripts
+            // to be executed for richtext input initialization
+            // $(this.#getFormTileDiv()).html(await response.text());
+
+            this.#getFormTileHeader().innerHTML = __("Translate tiles");
+            this.#getFormTileDiv().classList.remove('d-none');
+            this.#getFormTileLoadingIndicatorDiv().classList.add('d-none');
+
+            this.#getTilesContainerDiv().innerHTML = await response.text();
         } catch (e) {
             glpi_toast_error(__('An unexpected error occurred'));
             console.error(e);

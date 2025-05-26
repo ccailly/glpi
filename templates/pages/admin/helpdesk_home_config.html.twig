@@ -65,7 +65,14 @@
             {% if editable %}
                 <div class="d-flex mb-3" data-glpi-helpdesk-config-actions>
                     <button
-                        class="btn btn-primary ms-2 w-auto d-flex align-items-center ms-auto"
+                        class="btn btn-outline-secondary ms-auto w-auto d-flex align-items-center"
+                        data-glpi-helpdesk-config-translate-action
+                    >
+                        <i class="ti ti-language me-1"></i>
+                        <span>{{ __("Translate tiles") }}<span>
+                    </button>
+                    <button
+                        class="btn btn-primary ms-2 w-auto d-flex align-items-center"
                         data-glpi-helpdesk-config-reorder-action-save
                     >
                         <i class="ti ti-device-floppy me-1"></i>
