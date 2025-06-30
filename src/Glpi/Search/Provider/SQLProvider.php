@@ -81,6 +81,7 @@ use Plugin;
 use Problem;
 use Glpi\DBAL\QueryExpression;
 use Glpi\DBAL\QueryFunction;
+use Glpi\DBAL\QuerySubQuery;
 use Project;
 use ProjectTask;
 use Reminder;
@@ -1208,6 +1209,26 @@ final class SQLProvider implements SearchProviderInterface
         }
 
         $SEARCH = [];
+
+        // Is the current criteria on a linked children item ? (e.g. search
+        // option 65 for CommonITILObjects)
+        // These search options will need an additionnal subquery in their WHERE
+        // clause to ensure accurate results
+        // See https://github.com/glpi-project/glpi/pull/13684 for detailed examples
+        $should_use_subquery = $opt["use_subquery"] ?? false;
+
+        // Default mode for most search types that use a subquery
+        $use_subquery_on_id_search = false;
+
+        // Special case for "contains" or "not contains" search type
+        $use_subquery_on_text_search = false;
+
+        // Special case when searching for an user (need to compare with login, firstname, ...)
+        $subquery_specific_username = false;
+
+        // The subquery operator will be "IN" or "NOT IN" depending on the context and criteria
+        $subquery_operator = "";
+
         switch ($searchtype) {
             /** @noinspection PhpMissingBreakStatementInspection */
             case "notcontains":
@@ -1241,23 +1262,86 @@ final class SQLProvider implements SearchProviderInterface
                         }
                     }
                 }
-                $SEARCH = [$nott ? "NOT LIKE" : "LIKE", self::makeTextSearchValue($val)];
+
+                if ($should_use_subquery) {
+                    // Subquery will be needed to get accurate results
+                    $use_subquery_on_text_search = true;
+
+                    // Potential negation will be handled by the subquery operator
+                    $SEARCH = ["IN", self::makeTextSearchValue($val)];
+                    $subquery_operator = $nott ? "NOT IN" : "IN";
+                } else {
+                    $SEARCH = [$nott ? "NOT LIKE" : "LIKE", self::makeTextSearchValue($val)];
+                }
+
                 break;
 
             case "equals":
-                $SEARCH = [$nott ? "<>" : "=", $val];
+                if ($should_use_subquery) {
+                    // Subquery will be needed to get accurate results
+                    $use_subquery_on_id_search = true;
+
+                    // Potential negation will be handled by the subquery operator
+                    $SEARCH = ["=", $val];
+                    $subquery_operator = $nott ? "NOT IN" : "IN";
+                } else {
+                    // Default case
+                    $SEARCH = [$nott ? "<>" : "=", $val];
+                }
+
                 break;
 
             case "notequals":
-                $SEARCH = [$nott ? "=" : "<>", $val];
+                if ($should_use_subquery) {
+                    // Subquery will be needed to get accurate results
+                    $use_subquery_on_id_search = true;
+
+                    // Potential negation will be handled by the subquery operator
+                    $SEARCH = ["=", $val];
+                    $subquery_operator = $nott ? "IN" : "NOT IN";
+                } else {
+                    // Default case
+                    $SEARCH = [$nott ? "=" : "<>", $val];
+                }
+
                 break;
 
             case "under":
-                $SEARCH = [$nott ? "NOT IN" : "IN", getSonsOf($inittable, $val)];
+                // Sometimes $val is not numeric (mygroups)
+                // In this case we must set an invalid value and let the related
+                // specific code handle in later on
+                $sons = is_numeric($val) ? implode("','", getSonsOf($inittable, $val)) : 'not yet set';
+                if ($should_use_subquery) {
+                    // Subquery will be needed to get accurate results
+                    $use_subquery_on_id_search = true;
+
+                    // Potential negation will be handled by the subquery operator
+                    $SEARCH = ["IN", $sons];
+                    $subquery_operator = $nott ? "NOT IN" : "IN";
+                } else {
+                    // Default case
+                    $SEARCH = [$nott ? "NOT IN" : "IN", $sons];
+                }
+
                 break;
 
             case "notunder":
-                $SEARCH = [$nott ? "IN" : "NOT IN", getSonsOf($inittable, $val)];
+                // Sometimes $val is not numeric (mygroups)
+                // In this case we must set an invalid value and let the related
+                // specific code handle in later on
+                $sons = is_numeric($val) ? implode("','", getSonsOf($inittable, $val)) : 'not yet set';
+                if ($should_use_subquery) {
+                    // Subquery will be needed to get accurate results
+                    $use_subquery_on_id_search = true;
+
+                    // Potential negation will be handled by the subquery operator
+                    $SEARCH = ["IN", $sons];
+                    $subquery_operator = $nott ? "IN" : "NOT IN";
+                } else {
+                    // Default case
+                    $SEARCH = [$nott ? "IN" : "NOT IN", $sons];
+                }
+
                 break;
 
             case "empty":
@@ -1332,14 +1416,20 @@ final class SQLProvider implements SearchProviderInterface
                 if ($val === 'myself') {
                     switch ($searchtype) {
                         case 'equals':
-                            return [
-                                "$table.id" => $_SESSION['glpiID'],
-                            ];
+                            $SEARCH = ['=', $_SESSION['glpiID']];
+                            break;
 
                         case 'notequals':
                             return [
                                 "$table.id" => ['<>', $_SESSION['glpiID']],
                             ];
+                            if ($use_subquery_on_id_search) {
+                                // Potential negation will be handled by the subquery operator
+                                $SEARCH = ['=', $_SESSION['glpiID']];
+                            } else {
+                                $SEARCH = ['<>', $_SESSION['glpiID']];
+                            }
+                            break;
                     }
                 }
 
@@ -1426,77 +1516,90 @@ final class SQLProvider implements SearchProviderInterface
                         }
                     }
                 }
-                $criteria = [
-                    $tmplink => [],
-                ];
-                $append_criterion_with_search($criteria[$tmplink], "$table.$name1");
-                $append_criterion_with_search($criteria[$tmplink], "$table.$name2");
-                $append_criterion_with_search($criteria[$tmplink], "$table.$field");
-                $append_criterion_with_search(
-                    $criteria[$tmplink],
-                    QueryFunction::concat([
-                        "$table.$name1",
-                        new QueryExpression($DB::quoteValue(' ')),
-                        "$table.$name2",
-                    ])
-                );
-                if ($nott && ($val !== 'NULL') && ($val !== 'null')) {
+
+                if ($use_subquery_on_text_search) {
+                    $subquery_specific_username = true;
+                    $subquery_specific_username_firstname_real_name = " OR `$name1` $SEARCH "
+                        . "OR `$name2` $SEARCH "
+                        . "OR CONCAT(`$name1`, ' ', `$name2`) $SEARCH";
+                    $subquery_specific_username_anonymous = self::makeTextCriteria(
+                        "`alternative_email`",
+                        $val,
+                        false,
+                        'OR'
+                    );
+
+                    break;
+                } else {
                     $criteria = [
-                        $tmplink => [
-                            'OR' => [
-                                $criteria,
-                                "$table.$field" => null,
-                            ],
-                            new QueryExpression($toadd),
-                        ],
+                        $tmplink => [],
                     ];
+                    $append_criterion_with_search($criteria[$tmplink], "$table.$name1");
+                    $append_criterion_with_search($criteria[$tmplink], "$table.$name2");
+                    $append_criterion_with_search($criteria[$tmplink], "$table.$field");
+                    $append_criterion_with_search(
+                        $criteria[$tmplink],
+                        QueryFunction::concat([
+                            "$table.$name1",
+                            new QueryExpression($DB::quoteValue(' ')),
+                            "$table.$name2",
+                        ])
+                    );
+                    if ($nott && ($val !== 'NULL') && ($val !== 'null')) {
+                        $criteria = [
+                            $tmplink => [
+                                'OR' => [
+                                    $criteria,
+                                    "$table.$field" => null,
+                                ],
+                                new QueryExpression($toadd),
+                            ],
+                        ];
+                    }
+
+                    return $criteria;
                 }
-                return $criteria;
 
             case "glpi_groups.completename":
                 if ($val === 'mygroups') {
                     switch ($searchtype) {
                         case 'equals':
-                            if (count($_SESSION['glpigroups']) === 0) {
-                                return [];
-                            }
-                            return [
-                                "$table.id" => $_SESSION['glpigroups'],
-                            ];
+                            $SEARCH = ['IN', $_SESSION['glpigroups']];
+                            break;
 
                         case 'notequals':
-                            if (count($_SESSION['glpigroups']) === 0) {
-                                return [];
+                            if ($use_subquery_on_id_search) {
+                                // Potential negation will be handled by the subquery operator
+                                $SEARCH = ['IN', $_SESSION['glpigroups']];
+                            } else {
+                                $SEARCH = ['NOT IN', $_SESSION['glpigroups']];
                             }
-                            return [
-                                "$table.id" => ['NOT IN', $_SESSION['glpigroups']],
-                            ];
+                            break;
 
                         case 'under':
-                            if (count($_SESSION['glpigroups']) === 0) {
-                                return [];
-                            }
                             $groups = $_SESSION['glpigroups'];
                             foreach ($_SESSION['glpigroups'] as $g) {
                                 $groups += getSonsOf($inittable, $g);
                             }
                             $groups = array_unique($groups);
-                            return [
-                                "$table.id" => $groups,
-                            ];
+
+                            $SEARCH = ['IN', $groups];
+                            break;
 
                         case 'notunder':
-                            if (count($_SESSION['glpigroups']) === 0) {
-                                return [];
-                            }
                             $groups = $_SESSION['glpigroups'];
                             foreach ($_SESSION['glpigroups'] as $g) {
                                 $groups += getSonsOf($inittable, $g);
                             }
                             $groups = array_unique($groups);
-                            return [
-                                "$table.id" => ['NOT IN', $groups],
-                            ];
+
+
+                            if ($use_subquery_on_id_search) {
+                                // Potential negation will be handled by the subquery operator
+                                $SEARCH = ['IN', $groups];
+                            } else {
+                                $SEARCH = ['NOT IN', $groups];
+                            }
 
                         case 'empty':
                             $criteria = [];
@@ -1952,6 +2055,178 @@ final class SQLProvider implements SearchProviderInterface
                     }
                     break;
             }
+        }
+
+        // Using subquery in the WHERE clause
+        if ($use_subquery_on_id_search || $use_subquery_on_text_search) {
+            // Compute tables and fields names
+            $main_table = getTableForItemType($itemtype);
+            $fk = getForeignKeyFieldForTable($main_table);
+            $beforejoin = $opt['joinparams']['beforejoin'];
+            $child_table = $opt['table'];
+            $link_table = $beforejoin['table'];
+            $linked_fk = $beforejoin['joinparams']['linkfield'] ?? getForeignKeyFieldForTable($opt['table']);
+
+            // Handle extra condition (e.g. filtering group type)
+            $addcondition = '';
+            if (isset($beforejoin['joinparams']['condition'])) {
+                $placeholders = [
+                    '`REFTABLE`' => "`$main_table`",
+                    'REFTABLE'   => "`$main_table`",
+                    '`NEWTABLE`' => "`$link_table`",
+                    'NEWTABLE'   => "`$link_table`",
+                ];
+                // Recursively walk through add_criteria array and make the placeholder replacements in the keys and values
+                $replace_placeholders = static function ($add_criteria) use (&$replace_placeholders, $placeholders) {
+                    $new_criteria = [];
+                    foreach ($add_criteria as $key => $value) {
+                        $new_key = strtr($key, $placeholders);
+                        $replaced_key = (string) $new_key !== (string) $key;
+                        if (is_array($value)) {
+                            $new_criteria[$new_key] = $replace_placeholders($value);
+                        } elseif (is_a($value, QueryExpression::class)) {
+                            $value_string = $value->getValue();
+                            $new_value = strtr($value_string, $placeholders);
+                            $new_criteria[$new_key] = new QueryExpression($new_value);
+                        } elseif ($value !== null) {
+                            $new_criteria[$new_key] = strtr($value, $placeholders);
+                        } else {
+                            $new_criteria[$new_key] = $value;
+                        }
+                        if ($replaced_key) {
+                            unset($new_criteria[$key]);
+                        }
+                    }
+                    return $new_criteria;
+                };
+
+                $addcondition = $replace_placeholders($beforejoin['joinparams']['condition']);
+            }
+
+            $criteria = [];
+            if ($use_subquery_on_id_search) {
+                // Subquery for "Is not", "Not + is", "Not under" and "Not + Under" search types
+                // As an example, when looking for tickets that don't have a
+                // given observer group (id = 4), $out will look like this:
+                //
+                // AND `glpi_tickets`.`id` NOT IN (
+                //     SELECT `tickets_id`
+                //     FROM `glpi_groups_tickets`
+                //     WHERE `groups_id` = '4' AND `glpi_groups_tickets`.`type` = '3'
+                // )
+                if ($val == 0) {
+                    // Special case, search criteria is empty
+                    $subquery_operator = $subquery_operator == "IN" ? "NOT IN" : "IN";
+                    $criteria = [
+                        "$main_table.id" => [
+                            $subquery_operator => [
+                                'SELECT' => $fk,
+                                'FROM'   => $link_table,
+                                'WHERE'  => [
+                                    '1' => 1,
+                                    $addcondition
+                                ]
+                            ]
+                        ]
+                    ];
+                } else {
+                    $sub_query_criteria = [
+                        'SELECT' => $fk,
+                        'FROM'   => $link_table,
+                        'WHERE'  => [
+                            $addcondition
+                        ]
+                    ];
+                    $append_criterion_with_search(
+                        $sub_query_criteria['WHERE'],
+                        "$linked_fk"
+                    );
+
+                    $criteria = [
+                        "$main_table.id" => [
+                            $subquery_operator => new QuerySubQuery($sub_query_criteria),
+                        ]
+                    ];
+                }
+            } elseif ($use_subquery_on_text_search) {
+                // Subquery for "Not contains" and "Not + contains" search types
+                // As an example, when looking for tickets that don't have a
+                // given observer group (name = "groupname"), $out will look like this:
+                //
+                // AND `glpi_tickets`.`id` NOT IN (
+                //      SELECT `tickets_id`
+                //      FROM `glpi_groups_tickets`
+                //      WHERE `groups_id` IN (
+                //          SELECT `id`
+                //          FROM `glpi_groups`
+                //          WHERE `completename`LIKE '%groupname%'
+                //      ) AND `glpi_groups_tickets`.`type` = '3'
+                // )
+
+                if ($subquery_specific_username) {
+                    $criteria = [
+                        "$main_table.id" => [
+                            $subquery_operator => [
+                                'SELECT' => $fk,
+                                'FROM'   => $link_table,
+                                'WHERE'  => [
+                                    "$linked_fk" => [
+                                        'IN' => [
+                                            'SELECT' => 'id',
+                                            'FROM'   => $child_table,
+                                            'WHERE'  => [
+                                                $subquery_specific_username_firstname_real_name
+                                            ]
+                                        ]
+                                    ],
+                                    $subquery_specific_username_anonymous,
+                                    $addcondition
+                                ]
+                            ]
+                        ]
+                    ];
+                    $append_criterion_with_search(
+                        $criteria["$main_table.id"][$subquery_operator]['WHERE']["$linked_fk"]['IN']['WHERE'],
+                        "$field"
+                    );
+                } else {
+                    // $out = " $link `$main_table`.`id` $subquery_operator (
+                    //     SELECT `$fk`
+                    //     FROM `$link_table`
+                    //     WHERE `$linked_fk` IN (
+                    //         SELECT `id`
+                    //         FROM `$child_table`
+                    //         WHERE `$field` $SEARCH
+                    //     ) $addcondition
+                    // )";
+
+                    $criteria = [
+                        "$main_table.id" => [
+                            $subquery_operator => [
+                                'SELECT' => $fk,
+                                'FROM'   => $link_table,
+                                'WHERE'  => [
+                                    "$linked_fk" => [
+                                        'IN' => [
+                                            'SELECT' => 'id',
+                                            'FROM'   => $child_table,
+                                            'WHERE'  => [
+                                                $addcondition
+                                            ]
+                                        ]
+                                    ],
+                                    $addcondition
+                                ]
+                            ]
+                        ]
+                    ];
+                    $append_criterion_with_search(
+                        $criteria["$main_table.id"][$subquery_operator]['WHERE']["$linked_fk"]['IN']['WHERE'],
+                        "$field"
+                    );
+                }
+            }
+            return ['OR' => [$criteria]];
         }
 
         // Default case
