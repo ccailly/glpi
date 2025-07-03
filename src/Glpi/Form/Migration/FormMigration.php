@@ -1513,11 +1513,19 @@ class FormMigration extends AbstractPluginMigration
 
             // Apply minimum range condition
             if (is_numeric($raw_condition['range_min']) && !empty(array_intersect(
-                [ValueOperator::GREATER_THAN_OR_EQUALS->value, ValueOperator::LENGTH_GREATER_THAN_OR_EQUALS->value],
+                [
+                    ValueOperator::GREATER_THAN_OR_EQUALS->value,
+                    ValueOperator::LENGTH_GREATER_THAN_OR_EQUALS->value,
+                    ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS->value,
+                ],
                 array_map(fn($vp) => $vp->value, $supported_value_operators)
             ))) {
                 $value_operator = current(array_intersect(
-                    [ValueOperator::GREATER_THAN_OR_EQUALS->value, ValueOperator::LENGTH_GREATER_THAN_OR_EQUALS->value],
+                    [
+                        ValueOperator::GREATER_THAN_OR_EQUALS->value,
+                        ValueOperator::LENGTH_GREATER_THAN_OR_EQUALS->value,
+                        ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS->value,
+                    ],
                     array_map(fn($vp) => $vp->value, $supported_value_operators)
                 ));
                 $input['_validation_conditions'][] = [
@@ -1532,11 +1540,19 @@ class FormMigration extends AbstractPluginMigration
 
             // Apply maximum range condition
             if (is_numeric($raw_condition['range_max']) && !empty(array_intersect(
-                [ValueOperator::LESS_THAN_OR_EQUALS->value, ValueOperator::LENGTH_LESS_THAN_OR_EQUALS->value],
+                [
+                    ValueOperator::LESS_THAN_OR_EQUALS->value,
+                    ValueOperator::LENGTH_LESS_THAN_OR_EQUALS->value,
+                    ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS->value,
+                ],
                 array_map(fn($vp) => $vp->value, $supported_value_operators)
             ))) {
                 $value_operator = current(array_intersect(
-                    [ValueOperator::LESS_THAN_OR_EQUALS->value, ValueOperator::LENGTH_LESS_THAN_OR_EQUALS->value],
+                    [
+                        ValueOperator::LESS_THAN_OR_EQUALS->value,
+                        ValueOperator::LENGTH_LESS_THAN_OR_EQUALS->value,
+                        ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS->value,
+                    ],
                     array_map(fn($vp) => $vp->value, $supported_value_operators)
                 ));
                 $input['_validation_conditions'][] = [

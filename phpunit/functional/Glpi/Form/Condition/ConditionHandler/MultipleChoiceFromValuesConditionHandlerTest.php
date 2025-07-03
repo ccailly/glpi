@@ -322,5 +322,157 @@ final class MultipleChoiceFromValuesConditionHandlerTest extends AbstractConditi
             'expected_result'     => false,
             'question_extra_data' => $extra_data,
         ];
+
+        // Test with the SELECTED_ITEMS_COUNT_GREATER_THAN operator
+        yield "Selected items count greater than - case 1 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than - case 2 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than - case 3 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b", "option_c"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than - case 4 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            'condition_value'     => 0,
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than - case 5 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            'condition_value'     => 0,
+            'submitted_answer'    => [],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test with the SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS operator
+        yield "Selected items count greater than or equals - case 1 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than or equals - case 2 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than or equals - case 3 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b", "option_c"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count greater than or equals - case 4 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            'condition_value'     => 0,
+            'submitted_answer'    => [],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test with the SELECTED_ITEMS_COUNT_LESS_THAN operator
+        yield "Selected items count less than - case 1 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than - case 2 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than - case 3 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b", "option_c"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than - case 4 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN,
+            'condition_value'     => 1,
+            'submitted_answer'    => [],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test with the SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS operator
+        yield "Selected items count less than or equals - case 1 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than or equals - case 2 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than or equals - case 3 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+            'condition_value'     => 2,
+            'submitted_answer'    => ["option_a", "option_b", "option_c"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than or equals - case 4 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+            'condition_value'     => 0,
+            'submitted_answer'    => [],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Selected items count less than or equals - case 5 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+            'condition_value'     => 0,
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
     }
 }

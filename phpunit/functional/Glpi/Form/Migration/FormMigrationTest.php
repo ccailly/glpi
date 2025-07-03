@@ -1761,8 +1761,8 @@ final class FormMigrationTest extends DbTestCase
             ],
         ];
 
-        // QuestionTypeDropdown does not support any validation operators
-        yield 'QuestionTypeDropdown - Regex and range validation' => [
+        // QuestionTypeDropdown with single choice does not support any validation operators
+        yield 'QuestionTypeDropdown single choices- Regex and range validation' => [
             'select',
             [
                 [
@@ -1776,6 +1776,64 @@ final class FormMigrationTest extends DbTestCase
                 ],
             ],
             ValidationStrategy::NO_VALIDATION,
+        ];
+
+        // QuestionTypeDropdown with multiple choices only supports range validation, not regex
+        yield 'QuestionTypeDropdown multiple choices- Regex and range validation' => [
+            'multiselect',
+            [
+                [
+                    'regex'     => '/^[A-Za-z0-9]+$/',
+                    'fieldname' => 'regex',
+                ],
+                [
+                    'range_min' => '5',
+                    'range_max' => '50',
+                    'fieldname' => 'range',
+                ],
+            ],
+            ValidationStrategy::VALID_IF,
+            [
+                [
+                    'value_operator' => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+                    'value'          => '5',
+                    'logic_operator' => LogicOperator::AND,
+                ],
+                [
+                    'value_operator' => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+                    'value'          => '50',
+                    'logic_operator' => LogicOperator::AND,
+                ],
+            ],
+        ];
+
+        // QuestionTypeCheckbox only supports range validation, not regex
+        yield 'QuestionTypeCheckbox - Regex and range validation' => [
+            'checkboxes',
+            [
+                [
+                    'regex'     => '/^[A-Za-z0-9]+$/',
+                    'fieldname' => 'regex',
+                ],
+                [
+                    'range_min' => '5',
+                    'range_max' => '50',
+                    'fieldname' => 'range',
+                ],
+            ],
+            ValidationStrategy::VALID_IF,
+            [
+                [
+                    'value_operator' => ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+                    'value'          => '5',
+                    'logic_operator' => LogicOperator::AND,
+                ],
+                [
+                    'value_operator' => ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+                    'value'          => '50',
+                    'logic_operator' => LogicOperator::AND,
+                ],
+            ],
         ];
     }
 

@@ -61,9 +61,25 @@ final class MultipleChoiceFromValuesConditionHandler implements ConditionHandler
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
-        return [
-            'values' => $this->values,
-        ];
+        switch ($condition->getValueOperator()) {
+            case ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN:
+            case ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS:
+            case ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN:
+            case ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS:
+                // For selected items count operators, we want to display a number input.
+                return [
+                    'use_number_input' => true,
+                    'attributes' => [
+                        'type' => 'number',
+                        'step' => 'any',
+                    ],
+                ];
+            default:
+                // For other operators, we want to display a dropdown with multiple selection.
+                return [
+                    'values' => $this->values,
+                ];
+        }
     }
 
     #[Override]

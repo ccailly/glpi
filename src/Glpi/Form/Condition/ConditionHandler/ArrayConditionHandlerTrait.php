@@ -45,6 +45,10 @@ trait ArrayConditionHandlerTrait
             ValueOperator::NOT_EQUALS,
             ValueOperator::CONTAINS,
             ValueOperator::NOT_CONTAINS,
+            ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN,
+            ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
         ];
     }
 
@@ -53,6 +57,26 @@ trait ArrayConditionHandlerTrait
         ValueOperator $operator,
         mixed $b,
     ): bool {
+        // For count operators, we only need $a to be an array
+        if (in_array($operator, [
+            ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN,
+            ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS,
+        ])) {
+            if (!is_array($a)) {
+                return false;
+            }
+
+            return match ($operator) {
+                ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN           => count($a) > intval($b),
+                ValueOperator::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS => count($a) >= intval($b),
+                ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN              => count($a) < intval($b),
+                ValueOperator::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS    => count($a) <= intval($b),
+            };
+        }
+
+        // For other operators, both $a and $b need to be arrays
         if (!is_array($a) || !is_array($b)) {
             return false;
         }

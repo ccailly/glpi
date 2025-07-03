@@ -56,6 +56,11 @@ enum ValueOperator: string
     case LENGTH_LESS_THAN                  = 'length_less_than';
     case LENGTH_LESS_THAN_OR_EQUALS        = 'length_less_than_or_equals';
 
+    case SELECTED_ITEMS_COUNT_GREATER_THAN                = 'selected_items_count_greater_than';
+    case SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS      = 'selected_items_count_greater_than_or_equals';
+    case SELECTED_ITEMS_COUNT_LESS_THAN                   = 'selected_items_count_less_than';
+    case SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS         = 'selected_items_count_less_than_or_equals';
+
     case VISIBLE = 'visible';
     case NOT_VISIBLE = 'not_visible';
 
@@ -82,6 +87,11 @@ enum ValueOperator: string
             self::LENGTH_LESS_THAN                  => __("Length is less than"),
             self::LENGTH_LESS_THAN_OR_EQUALS        => __("Length is less than or equals to"),
 
+            self::SELECTED_ITEMS_COUNT_GREATER_THAN                => __("Number of selected items is greater than"),
+            self::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS      => __("Number of selected items is greater than or equals to"),
+            self::SELECTED_ITEMS_COUNT_LESS_THAN                   => __("Number of selected items is less than"),
+            self::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS         => __("Number of selected items is less than or equals to"),
+
             self::VISIBLE                => __("Is visible"),
             self::NOT_VISIBLE            => __("Is not visible"),
         };
@@ -99,7 +109,11 @@ enum ValueOperator: string
             self::LENGTH_GREATER_THAN,
             self::LENGTH_GREATER_THAN_OR_EQUALS,
             self::LENGTH_LESS_THAN,
-            self::LENGTH_LESS_THAN_OR_EQUALS => true,
+            self::LENGTH_LESS_THAN_OR_EQUALS,
+            self::SELECTED_ITEMS_COUNT_GREATER_THAN,
+            self::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS,
+            self::SELECTED_ITEMS_COUNT_LESS_THAN,
+            self::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS => true,
 
             default => false
         };
@@ -122,6 +136,11 @@ enum ValueOperator: string
                 self::LENGTH_LESS_THAN                  => sprintf(__("The length must be less than %s"), $condition_data->getValue()),
                 self::LENGTH_LESS_THAN_OR_EQUALS        => sprintf(__("The length must be less than or equal to %s"), $condition_data->getValue()),
 
+                self::SELECTED_ITEMS_COUNT_GREATER_THAN                => sprintf(__("The count must be greater than %s"), $condition_data->getValue()),
+                self::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS      => sprintf(__("The count must be greater than or equal to %s"), $condition_data->getValue()),
+                self::SELECTED_ITEMS_COUNT_LESS_THAN                   => sprintf(__("The count must be less than %s"), $condition_data->getValue()),
+                self::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS         => sprintf(__("The count must be less than or equal to %s"), $condition_data->getValue()),
+
                 default => __("The value is not valid"),
             };
         } elseif ($validation_strategy === ValidationStrategy::INVALID_IF) {
@@ -136,6 +155,11 @@ enum ValueOperator: string
                 self::LENGTH_GREATER_THAN_OR_EQUALS     => sprintf(__("The length must not be greater than or equal to %s"), $condition_data->getValue()),
                 self::LENGTH_LESS_THAN                  => sprintf(__("The length must not be less than %s"), $condition_data->getValue()),
                 self::LENGTH_LESS_THAN_OR_EQUALS        => sprintf(__("The length must not be less than or equal to %s"), $condition_data->getValue()),
+
+                self::SELECTED_ITEMS_COUNT_GREATER_THAN                => sprintf(__("The count must not be greater than %s"), $condition_data->getValue()),
+                self::SELECTED_ITEMS_COUNT_GREATER_THAN_OR_EQUALS      => sprintf(__("The count must not be greater than or equal to %s"), $condition_data->getValue()),
+                self::SELECTED_ITEMS_COUNT_LESS_THAN                   => sprintf(__("The count must not be less than %s"), $condition_data->getValue()),
+                self::SELECTED_ITEMS_COUNT_LESS_THAN_OR_EQUALS         => sprintf(__("The count must not be less than or equal to %s"), $condition_data->getValue()),
 
                 default => __("The value is not valid"),
             };
