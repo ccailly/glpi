@@ -45,6 +45,8 @@ trait ArrayConditionHandlerTrait
             ValueOperator::NOT_EQUALS,
             ValueOperator::CONTAINS,
             ValueOperator::NOT_CONTAINS,
+            ValueOperator::MATCH_REGEX,
+            ValueOperator::NOT_MATCH_REGEX,
         ];
     }
 
@@ -64,13 +66,75 @@ trait ArrayConditionHandlerTrait
         sort($b);
 
         return match ($operator) {
-            ValueOperator::EQUALS       => $a == $b,
-            ValueOperator::NOT_EQUALS   => $a != $b,
-            ValueOperator::CONTAINS     => empty(array_diff($b, $a)),
-            ValueOperator::NOT_CONTAINS => !empty(array_diff($b, $a)),
+            ValueOperator::EQUALS          => $a == $b,
+            ValueOperator::NOT_EQUALS      => $a != $b,
+            ValueOperator::CONTAINS        => empty(array_diff($b, $a)),
+            ValueOperator::NOT_CONTAINS    => !empty(array_diff($b, $a)),
 
             // Unsupported operators
             default => false,
         };
+    }
+
+    protected function applyRegexValueOperator(
+        mixed $a,
+        ValueOperator $operator,
+        mixed $b,
+    ): bool {
+        if (!is_array($a)) {
+            return false;
+        }
+
+        $pattern = $b;
+        if (!is_string($pattern)) {
+            return false;
+        }
+
+        return match ($operator) {
+            ValueOperator::MATCH_REGEX     => $this->array_preg_match($a, $pattern),
+            ValueOperator::NOT_MATCH_REGEX => $this->array_preg_not_match($a, $pattern),
+
+            // Unsupported operators
+            default => false,
+        };
+    }
+
+    protected function array_preg_match(array $values, string $pattern): bool
+    {
+        $pattern = strtolower($pattern);
+        if ($values === []) {
+            return false; // No elements, so none match
+        }
+
+        foreach ($values as $value) {
+            if (!@preg_match($pattern, $this->getAlternativeValue($value))) {    // @phpstan-ignore theCodingMachineSafe.function
+                return false; // If any value doesn't match, the whole condition fails
+            }
+        }
+        return true; // All values match the regex, so MATCH_REGEX is true
+    }
+
+    protected function array_preg_not_match(array $values, string $pattern): bool
+    {
+        $pattern = strtolower($pattern);
+        if ($values === []) {
+            return true; // No elements, so none match
+        }
+
+        foreach ($values as $value) {
+            if (@preg_match($pattern, $this->getAlternativeValue($value))) {    // @phpstan-ignore theCodingMachineSafe.function
+                return false; // At least one element matches, so NOT_MATCH_REGEX is false
+            }
+        }
+        return true; // No elements match, so NOT_MATCH_REGEX is true
+    }
+
+    /**
+     * Get an alternative value for a given value.
+     * Maybe useful to handle specific cases like UUIDs or labels.
+     */
+    protected function getAlternativeValue(string $value): ?string
+    {
+        return $value; // Default implementation, can be overridden in specific handlers
     }
 }

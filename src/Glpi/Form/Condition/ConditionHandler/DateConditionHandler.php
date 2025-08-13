@@ -42,6 +42,9 @@ final class DateConditionHandler extends AbstractDateTimeConditionHandler
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
-        return ['attributes' => ['type' => 'date']];
+        return array_merge(
+            ['attributes' => ['type' => 'date']],
+            parent::getTemplateParameters($condition),
+        );
     }
 }

@@ -42,6 +42,11 @@ use tests\units\Glpi\Form\Condition\AbstractConditionHandler;
 
 final class UrgencyConditionHandlerTest extends AbstractConditionHandler
 {
+    public static function getConditionHandler(): ConditionHandlerInterface
+    {
+        return new UrgencyConditionHandler();
+    }
+
     #[Override]
     public static function conditionHandlerProvider(): iterable
     {
@@ -181,6 +186,80 @@ final class UrgencyConditionHandlerTest extends AbstractConditionHandler
             'question_type'      => $type,
             'condition_operator' => ValueOperator::LESS_THAN_OR_EQUALS,
             'condition_value'    => Urgency::MEDIUM->value,
+            'submitted_answer'   => Urgency::MEDIUM->value,
+            'expected_result'    => true,
+        ];
+
+        // Test urgency answers with the MATCH_REGEX operator
+        yield "Match regex check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^3$/',
+            'submitted_answer'   => Urgency::MEDIUM->value,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[45]$/',
+            'submitted_answer'   => Urgency::HIGH->value,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[12]$/',
+            'submitted_answer'   => Urgency::LOW->value,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[45]$/',
+            'submitted_answer'   => Urgency::LOW->value,
+            'expected_result'    => false,
+        ];
+        yield "Match regex check - case 5 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/invalid_regex',
+            'submitted_answer'   => Urgency::MEDIUM->value,
+            'expected_result'    => false,
+        ];
+
+        // Test urgency answers with the NOT_MATCH_REGEX operator
+        yield "Not match regex check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^3$/',
+            'submitted_answer'   => Urgency::HIGH->value,
+            'expected_result'    => true,
+        ];
+        yield "Not match regex check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^3$/',
+            'submitted_answer'   => Urgency::MEDIUM->value,
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^[45]$/',
+            'submitted_answer'   => Urgency::LOW->value,
+            'expected_result'    => true,
+        ];
+        yield "Not match regex check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^[45]$/',
+            'submitted_answer'   => Urgency::HIGH->value,
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 5 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/invalid_regex',
             'submitted_answer'   => Urgency::MEDIUM->value,
             'expected_result'    => true,
         ];

@@ -58,14 +58,23 @@ final class MultipleChoiceFromValuesConditionHandler implements
     #[Override]
     public function getTemplate(): string
     {
-        return '/pages/admin/form/condition_handler_templates/dropdown_multiple.html.twig';
+        return '/pages/admin/form/condition_handler_templates/selectables.html.twig';
     }
 
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
+        $input_type = 'dropdown_multiple';
+        if (
+            $condition->getValueOperator() === ValueOperator::MATCH_REGEX
+            || $condition->getValueOperator() === ValueOperator::NOT_MATCH_REGEX
+        ) {
+            $input_type = 'input';
+        }
+
         return [
-            'values' => $this->values,
+            'values'     => $this->values,
+            'input_type' => $input_type,
         ];
     }
 
@@ -75,12 +84,30 @@ final class MultipleChoiceFromValuesConditionHandler implements
         ValueOperator $operator,
         mixed $b,
     ): bool {
-        return $this->applyArrayValueOperator($a, $operator, $b);
+        if ($this->applyArrayValueOperator($a, $operator, $b)) {
+            return true;
+        }
+
+        if ($this->applyRegexValueOperator($a, $operator, $b)) {
+            return true;
+        }
+
+        // Unsupported operators
+        return false;
     }
 
     #[Override]
     public function convertConditionValue(string $value): int
     {
         return array_search($value, $this->values, true) ?: 0;
+    }
+
+    protected function getAlternativeValue(string $uuid): ?string
+    {
+        if (!isset($this->values[$uuid])) {
+            return null;
+        }
+
+        return strtolower(strval($this->values[$uuid]));
     }
 }

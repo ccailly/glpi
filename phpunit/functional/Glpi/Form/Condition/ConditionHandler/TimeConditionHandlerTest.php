@@ -42,6 +42,11 @@ use tests\units\Glpi\Form\Condition\AbstractConditionHandler;
 
 final class TimeConditionHandlerTest extends AbstractConditionHandler
 {
+    public static function getConditionHandler(): ConditionHandlerInterface
+    {
+        return new TimeConditionHandler();
+    }
+
     #[Override]
     public static function conditionHandlerProvider(): iterable
     {
@@ -202,6 +207,90 @@ final class TimeConditionHandlerTest extends AbstractConditionHandler
             'question_type'       => $type,
             'condition_operator'  => ValueOperator::LESS_THAN_OR_EQUALS,
             'condition_value'     => "15:30",
+            'submitted_answer'    => "15:30",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test time answers with the MATCH_REGEX operator
+        yield "Match regex check - case 1 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^15:/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 2 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^14:/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 3 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^[1-2][0-9]:[0-5][0-9]$/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 4 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^0[0-9]:/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 5 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/invalid_regex',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test time answers with the NOT_MATCH_REGEX operator
+        yield "Not match regex check - case 1 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^14:/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 2 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^15:/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 3 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^0[0-9]:/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 4 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^[1-2][0-9]:[0-5][0-9]$/',
+            'submitted_answer'    => "15:30",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 5 for $type (with time)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/invalid_regex',
             'submitted_answer'    => "15:30",
             'expected_result'     => true,
             'question_extra_data' => $extra_data,

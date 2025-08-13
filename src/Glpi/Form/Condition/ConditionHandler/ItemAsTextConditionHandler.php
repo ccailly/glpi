@@ -53,6 +53,8 @@ final class ItemAsTextConditionHandler implements ConditionHandlerInterface
         return [
             ValueOperator::CONTAINS,
             ValueOperator::NOT_CONTAINS,
+            ValueOperator::MATCH_REGEX,
+            ValueOperator::NOT_MATCH_REGEX,
         ];
     }
 
@@ -92,6 +94,14 @@ final class ItemAsTextConditionHandler implements ConditionHandlerInterface
         return match ($operator) {
             ValueOperator::CONTAINS     => str_contains($a, $b),
             ValueOperator::NOT_CONTAINS => !str_contains($a, $b),
+
+            // Note: we do not want to throw warnings here if an invalid regex
+            // is configured by the user.
+            // There is no clean way to test that a regex is valid in PHP,
+            // therefore the simplest way to deal with that is to ignore
+            // warnings using the "@" prefix.
+            ValueOperator::MATCH_REGEX     => @preg_match($b, $a),    // @phpstan-ignore theCodingMachineSafe.function
+            ValueOperator::NOT_MATCH_REGEX => !@preg_match($b, $a),   // @phpstan-ignore theCodingMachineSafe.function
 
             // Unsupported operators
             default => false,

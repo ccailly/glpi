@@ -44,6 +44,11 @@ use tests\units\Glpi\Form\Condition\AbstractConditionHandler;
 
 final class MultipleChoiceFromValuesConditionHandlerTest extends AbstractConditionHandler
 {
+    public static function getConditionHandler(): ConditionHandlerInterface
+    {
+        return new MultipleChoiceFromValuesConditionHandler(['opt']);
+    }
+
     #[Override]
     public static function conditionHandlerProvider(): iterable
     {
@@ -319,6 +324,122 @@ final class MultipleChoiceFromValuesConditionHandlerTest extends AbstractConditi
             'condition_operator'  => ValueOperator::NOT_CONTAINS,
             'condition_value'     => ["option_a", "option_b"],
             'submitted_answer'    => ["option_c", "option_b", "option_a"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test with the MATCH_REGEX operator
+        yield "Match regex check - empty answer case for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => [],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 1 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 2 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_c"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 3 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a", "option_b"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 4 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_c", "option_d"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 5 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a", "option_b", "option_c"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 6 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a", "option_b", "option_c", "option_d"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test with the NOT_MATCH_REGEX operator
+        yield "Not match regex check - empty answer case for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => [],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 1 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_c"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 2 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 3 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_c", "option_d"],
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 4 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a", "option_b"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 5 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a", "option_b", "option_c"],
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 6 for $type" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/option [AB]/',
+            'submitted_answer'    => ["option_a", "option_b", "option_c", "option_d"],
             'expected_result'     => false,
             'question_extra_data' => $extra_data,
         ];

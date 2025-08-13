@@ -35,6 +35,7 @@
 namespace Glpi\Form\Condition\ConditionHandler;
 
 use Glpi\Form\Condition\ConditionData;
+use Glpi\Form\Condition\ValueOperator;
 use Glpi\Urgency;
 use Override;
 
@@ -48,12 +49,23 @@ final class UrgencyConditionHandler extends NumberConditionHandler
     #[Override]
     public function getTemplate(): string
     {
-        return '/pages/admin/form/condition_handler_templates/dropdown.html.twig';
+        return '/pages/admin/form/condition_handler_templates/selectables.html.twig';
     }
 
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
-        return ['values' => Urgency::getUrgencyValuesForDropdown()];
+        $input_type = 'dropdown';
+        if (
+            $condition->getValueOperator() === ValueOperator::MATCH_REGEX
+            || $condition->getValueOperator() === ValueOperator::NOT_MATCH_REGEX
+        ) {
+            $input_type = 'input';
+        }
+
+        return [
+            'values'     => Urgency::getUrgencyValuesForDropdown(),
+            'input_type' => $input_type,
+        ];
     }
 }

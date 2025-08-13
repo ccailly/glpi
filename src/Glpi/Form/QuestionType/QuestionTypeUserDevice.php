@@ -39,6 +39,7 @@ use CommonDBTM;
 use CommonItilObject_Item;
 use Glpi\Application\View\TemplateRenderer;
 use Glpi\DBAL\JsonFieldInterface;
+use Glpi\Form\Condition\ConditionHandler\UserDevicesAsTextConditionHandler;
 use Glpi\Form\Condition\ConditionHandler\UserDevicesConditionHandler;
 use Glpi\Form\Condition\UsedAsCriteriaInterface;
 use Glpi\Form\Question;
@@ -302,7 +303,10 @@ TWIG;
 
         return array_merge(
             parent::getConditionHandlers($question_config),
-            [new UserDevicesConditionHandler($question_config->isMultipleDevices())],
+            [
+                new UserDevicesConditionHandler($question_config->isMultipleDevices()),
+                new UserDevicesAsTextConditionHandler($question_config->isMultipleDevices()),
+            ]
         );
     }
 }

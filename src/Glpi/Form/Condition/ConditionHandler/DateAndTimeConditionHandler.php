@@ -42,6 +42,9 @@ final class DateAndTimeConditionHandler extends AbstractDateTimeConditionHandler
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
-        return ['attributes' => ['type' => 'datetime-local']];
+        return array_merge(
+            ['attributes' => ['type' => 'datetime-local']],
+            parent::getTemplateParameters($condition),
+        );
     }
 }

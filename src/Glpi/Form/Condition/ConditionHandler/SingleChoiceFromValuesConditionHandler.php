@@ -53,19 +53,32 @@ final class SingleChoiceFromValuesConditionHandler implements
         return [
             ValueOperator::EQUALS,
             ValueOperator::NOT_EQUALS,
+            ValueOperator::MATCH_REGEX,
+            ValueOperator::NOT_MATCH_REGEX,
         ];
     }
 
     #[Override]
     public function getTemplate(): string
     {
-        return '/pages/admin/form/condition_handler_templates/dropdown.html.twig';
+        return '/pages/admin/form/condition_handler_templates/selectables.html.twig';
     }
 
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
-        return ['values' => $this->values];
+        $input_type = 'dropdown';
+        if (
+            $condition->getValueOperator() === ValueOperator::MATCH_REGEX
+            || $condition->getValueOperator() === ValueOperator::NOT_MATCH_REGEX
+        ) {
+            $input_type = 'input';
+        }
+
+        return [
+            'values'     => $this->values,
+            'input_type' => $input_type,
+        ];
     }
 
     #[Override]
@@ -85,8 +98,16 @@ final class SingleChoiceFromValuesConditionHandler implements
         $b = strtolower(strval($b));
 
         return match ($operator) {
-            ValueOperator::EQUALS       => $a === $b,
-            ValueOperator::NOT_EQUALS   => $a !== $b,
+            ValueOperator::EQUALS          => $a === $b,
+            ValueOperator::NOT_EQUALS      => $a !== $b,
+
+            // Note: we do not want to throw warnings here if an invalid regex
+            // is configured by the user.
+            // There is no clean way to test that a regex is valid in PHP,
+            // therefore the simplest way to deal with that is to ignore
+            // warnings using the "@" prefix.
+            ValueOperator::MATCH_REGEX     => @preg_match($b, $this->getOptionForUUID($a)),    // @phpstan-ignore theCodingMachineSafe.function
+            ValueOperator::NOT_MATCH_REGEX => !@preg_match($b, $this->getOptionForUUID($a)),   // @phpstan-ignore theCodingMachineSafe.function
 
             // Unsupported operators
             default => false,
@@ -97,5 +118,14 @@ final class SingleChoiceFromValuesConditionHandler implements
     public function convertConditionValue(string $value): int
     {
         return array_search($value, $this->values, true) ?: 0;
+    }
+
+    private function getOptionForUUID(string $uuid): ?string
+    {
+        if (!isset($this->values[$uuid])) {
+            return null;
+        }
+
+        return strtolower(strval($this->values[$uuid]));
     }
 }

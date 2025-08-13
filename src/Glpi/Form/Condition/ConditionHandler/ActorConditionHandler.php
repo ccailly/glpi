@@ -64,9 +64,18 @@ class ActorConditionHandler implements ConditionHandlerInterface
     #[Override]
     public function getTemplateParameters(ConditionData $condition): array
     {
+        $input_type = 'dropdown';
+        if (
+            $condition->getValueOperator() === ValueOperator::MATCH_REGEX
+            || $condition->getValueOperator() === ValueOperator::NOT_MATCH_REGEX
+        ) {
+            $input_type = 'input';
+        }
+
         return [
             'multiple'       => $this->extra_data_config->isMultipleActors(),
             'allowed_actors' => $this->question_type->getAllowedActorTypes(),
+            'input_type'     => $input_type,
         ];
     }
 
@@ -76,6 +85,29 @@ class ActorConditionHandler implements ConditionHandlerInterface
         ValueOperator $operator,
         mixed $b,
     ): bool {
-        return $this->applyArrayValueOperator($a, $operator, $b);
+        if ($this->applyArrayValueOperator($a, $operator, $b)) {
+            return true;
+        }
+
+        if ($this->applyRegexValueOperator($a, $operator, $b)) {
+            return true;
+        }
+
+        // Unsupported operators
+        return false;
+    }
+
+    protected function getAlternativeValue(string $actor): ?string
+    {
+        $actor_parts = explode('-', $actor);
+        $item = getItemForForeignKeyField($actor_parts[0]);
+        $item_id = (int) $actor_parts[1];
+
+        // Check if the item exists
+        if ($item && $item->getFromDB($item_id)) {
+            return strtolower(strval($item->getName()));
+        }
+
+        return null;
     }
 }

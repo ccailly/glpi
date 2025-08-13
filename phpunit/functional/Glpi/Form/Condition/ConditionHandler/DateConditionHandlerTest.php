@@ -42,6 +42,11 @@ use tests\units\Glpi\Form\Condition\AbstractConditionHandler;
 
 final class DateConditionHandlerTest extends AbstractConditionHandler
 {
+    public static function getConditionHandler(): ConditionHandlerInterface
+    {
+        return new DateConditionHandler();
+    }
+
     #[Override]
     public static function conditionHandlerProvider(): iterable
     {
@@ -202,6 +207,90 @@ final class DateConditionHandlerTest extends AbstractConditionHandler
             'question_type'       => $type,
             'condition_operator'  => ValueOperator::LESS_THAN_OR_EQUALS,
             'condition_value'     => "2024-02-27",
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test date answers with the MATCH_REGEX operator
+        yield "Match regex check - case 1 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^2024-02/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 2 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^2024-03/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 3 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^2024-[0-1][0-9]-[0-3][0-9]$/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 4 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/^2023/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Match regex check - case 5 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::MATCH_REGEX,
+            'condition_value'     => '/invalid_regex',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+
+        // Test date answers with the NOT_MATCH_REGEX operator
+        yield "Not match regex check - case 1 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^2024-03/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 2 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^2024-02/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 3 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^2023/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => true,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 4 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/^2024-[0-1][0-9]-[0-3][0-9]$/',
+            'submitted_answer'    => "2024-02-27",
+            'expected_result'     => false,
+            'question_extra_data' => $extra_data,
+        ];
+        yield "Not match regex check - case 5 for $type (with date)" => [
+            'question_type'       => $type,
+            'condition_operator'  => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'     => '/invalid_regex',
             'submitted_answer'    => "2024-02-27",
             'expected_result'     => true,
             'question_extra_data' => $extra_data,

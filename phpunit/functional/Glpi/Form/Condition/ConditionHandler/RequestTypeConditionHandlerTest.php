@@ -42,6 +42,11 @@ use Ticket;
 
 final class RequestTypeConditionHandlerTest extends AbstractConditionHandler
 {
+    public static function getConditionHandler(): ConditionHandlerInterface
+    {
+        return new RequestTypeConditionHandler();
+    }
+
     #[Override]
     public static function conditionHandlerProvider(): iterable
     {
@@ -74,6 +79,124 @@ final class RequestTypeConditionHandlerTest extends AbstractConditionHandler
             'condition_operator' => ValueOperator::EQUALS,
             'condition_value'    => Ticket::DEMAND_TYPE,
             'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => true,
+        ];
+
+        // Test request type answers with the NOT_EQUALS operator
+        yield "Not equals check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_EQUALS,
+            'condition_value'    => Ticket::INCIDENT_TYPE,
+            'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Not equals check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_EQUALS,
+            'condition_value'    => Ticket::INCIDENT_TYPE,
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => false,
+        ];
+        yield "Not equals check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_EQUALS,
+            'condition_value'    => Ticket::DEMAND_TYPE,
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Not equals check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_EQUALS,
+            'condition_value'    => Ticket::DEMAND_TYPE,
+            'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => false,
+        ];
+
+        // Test request type answers with the MATCH_REGEX operator
+        yield "Match regex check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^1$/',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^2$/',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => false,
+        ];
+        yield "Match regex check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^2$/',
+            'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[12]$/',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 5 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[12]$/',
+            'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 6 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/invalid_regex',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => false,
+        ];
+
+        // Test request type answers with the NOT_MATCH_REGEX operator
+        yield "Not match regex check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^1$/',
+            'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Not match regex check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^1$/',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^2$/',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => true,
+        ];
+        yield "Not match regex check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^[12]$/',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 5 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^[12]$/',
+            'submitted_answer'   => Ticket::DEMAND_TYPE,
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 6 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/invalid_regex',
+            'submitted_answer'   => Ticket::INCIDENT_TYPE,
             'expected_result'    => true,
         ];
     }

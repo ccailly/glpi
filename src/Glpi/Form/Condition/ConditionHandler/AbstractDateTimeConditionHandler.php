@@ -34,6 +34,7 @@
 
 namespace Glpi\Form\Condition\ConditionHandler;
 
+use Glpi\Form\Condition\ConditionData;
 use Glpi\Form\Condition\ValueOperator;
 use Override;
 
@@ -49,6 +50,8 @@ abstract class AbstractDateTimeConditionHandler implements ConditionHandlerInter
             ValueOperator::GREATER_THAN_OR_EQUALS,
             ValueOperator::LESS_THAN,
             ValueOperator::LESS_THAN_OR_EQUALS,
+            ValueOperator::MATCH_REGEX,
+            ValueOperator::NOT_MATCH_REGEX,
         ];
     }
 
@@ -59,11 +62,33 @@ abstract class AbstractDateTimeConditionHandler implements ConditionHandlerInter
     }
 
     #[Override]
+    public function getTemplateParameters(ConditionData $condition): array
+    {
+        if (
+            $condition->getValueOperator() === ValueOperator::MATCH_REGEX
+            || $condition->getValueOperator() === ValueOperator::NOT_MATCH_REGEX
+        ) {
+            return [
+                'attributes' => [
+                    'type' => 'text',
+                ],
+            ];
+        }
+
+        return [];
+    }
+
+    #[Override]
     public function applyValueOperator(
         mixed $a,
         ValueOperator $operator,
         mixed $b,
     ): bool {
+        // For regex operators, we delegate to a specific method
+        if ($operator === ValueOperator::MATCH_REGEX || $operator === ValueOperator::NOT_MATCH_REGEX) {
+            return $this->applyRegexValueOperator($a, $operator, $b);
+        }
+
         // Date can be compared as simple strings.
         $a = strtolower(strval($a));
         $b = strtolower(strval($b));
@@ -75,6 +100,28 @@ abstract class AbstractDateTimeConditionHandler implements ConditionHandlerInter
             ValueOperator::GREATER_THAN_OR_EQUALS => $a >= $b,
             ValueOperator::LESS_THAN              => $a < $b,
             ValueOperator::LESS_THAN_OR_EQUALS    => $a <= $b,
+
+            // Unsupported operators
+            default => false,
+        };
+    }
+
+    public function applyRegexValueOperator(
+        mixed $a,
+        ValueOperator $operator,
+        mixed $pattern,
+    ): bool {
+        if (!is_string($a) || !is_string($pattern)) {
+            return false;
+        }
+
+        // Normalize values
+        $a = strtolower(strval($a));
+        $pattern = strtolower(strval($pattern));
+
+        return match ($operator) {
+            ValueOperator::MATCH_REGEX     => @preg_match($pattern, $a),  // @phpstan-ignore theCodingMachineSafe.function
+            ValueOperator::NOT_MATCH_REGEX => !@preg_match($pattern, $a), // @phpstan-ignore theCodingMachineSafe.function
 
             // Unsupported operators
             default => false,

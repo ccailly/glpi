@@ -41,6 +41,11 @@ use tests\units\Glpi\Form\Condition\AbstractConditionHandler;
 
 final class NumberConditionHandlerTest extends AbstractConditionHandler
 {
+    public static function getConditionHandler(): ConditionHandlerInterface
+    {
+        return new NumberConditionHandler();
+    }
+
     #[Override]
     public static function conditionHandlerProvider(): iterable
     {
@@ -293,6 +298,87 @@ final class NumberConditionHandlerTest extends AbstractConditionHandler
             'condition_operator' => ValueOperator::LESS_THAN_OR_EQUALS,
             'condition_value'    => 10,
             'submitted_answer'   => 10.0,
+            'expected_result'    => true,
+        ];
+
+        // Test number answers with the MATCH_REGEX operator
+        yield "Match regex check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[0-9]+$/',
+            'submitted_answer'   => '123',
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[0-9]+$/',
+            'submitted_answer'   => 'abc',
+            'expected_result'    => false,
+        ];
+        yield "Match regex check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^1[0-9]+$/',
+            'submitted_answer'   => '123',
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^1[0-9]+$/',
+            'submitted_answer'   => '23',
+            'expected_result'    => false,
+        ];
+        yield "Match regex check - case 5 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/^[0-9]*\\.?[0-9]+$/',
+            'submitted_answer'   => '10.5',
+            'expected_result'    => true,
+        ];
+        yield "Match regex check - case 6 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::MATCH_REGEX,
+            'condition_value'    => '/invalid_regex',
+            'submitted_answer'   => '123',
+            'expected_result'    => false,
+        ];
+
+        // Test number answers with the NOT_MATCH_REGEX operator
+        yield "Not match regex check - case 1 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^[0-9]+$/',
+            'submitted_answer'   => 'abc',
+            'expected_result'    => true,
+        ];
+        yield "Not match regex check - case 2 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^[0-9]+$/',
+            'submitted_answer'   => '123',
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 3 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^1[0-9]+$/',
+            'submitted_answer'   => '23',
+            'expected_result'    => true,
+        ];
+        yield "Not match regex check - case 4 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/^1[0-9]+$/',
+            'submitted_answer'   => '123',
+            'expected_result'    => false,
+        ];
+        yield "Not match regex check - case 5 for $type" => [
+            'question_type'      => $type,
+            'condition_operator' => ValueOperator::NOT_MATCH_REGEX,
+            'condition_value'    => '/invalid_regex',
+            'submitted_answer'   => '123',
             'expected_result'    => true,
         ];
     }

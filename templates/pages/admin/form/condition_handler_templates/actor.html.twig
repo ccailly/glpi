@@ -32,46 +32,55 @@
 
 {% import 'components/form/fields_macros.html.twig' as fields %}
 
-{# Compute values for the dropdown #}
-{% set actor_values = {} %}
-{% set values = input_value is iterable ? input_value : [input_value] %}
-{% for actor in values %}
-    {% if actor matches '/^(.+)-(.+)$/' %}
-        {% set type = actor|split('-')[0] %}
-        {% set id = actor|split('-')[1] %}
-        {% if actor_values[type] is not defined %}
-            {% set actor_values = actor_values|merge({(type): []}) %}
+{% if input_type == 'input' %}
+    {% include '/pages/admin/form/condition_handler_templates/input.html.twig' with {
+        input_value: input_value,
+        input_name: input_name,
+        input_label: input_label,
+        attributes: attributes ?? {}
+    } %}
+{% elseif input_type == 'dropdown' %}
+    {# Compute values for the dropdown #}
+    {% set actor_values = {} %}
+    {% set values = input_value is iterable ? input_value : [input_value] %}
+    {% for actor in values %}
+        {% if actor matches '/^(.+)-(.+)$/' %}
+            {% set type = actor|split('-')[0] %}
+            {% set id = actor|split('-')[1] %}
+            {% if actor_values[type] is not defined %}
+                {% set actor_values = actor_values|merge({(type): []}) %}
+            {% endif %}
+            {% set actor_values = actor_values|merge({
+                (type): actor_values[type]|merge([id])
+            }) %}
         {% endif %}
-        {% set actor_values = actor_values|merge({
-            (type): actor_values[type]|merge([id])
-        }) %}
-    {% endif %}
-{% endfor %}
+    {% endfor %}
 
-{% set actors_dropdown = call('Glpi\\Form\\Dropdown\\FormActorsDropdown::show', [
-    input_name,
-    actor_values,
-    {
-        'multiple'        : multiple,
-        'init'            : true,
-        'allowed_types'   : allowed_actors,
-        'aria_label'      : input_label,
-        'specific_tags': {
-            'data-glpi-conditions-editor-value': '',
-        },
-    }
-]) %}
+    {% set actors_dropdown = call('Glpi\\Form\\Dropdown\\FormActorsDropdown::show', [
+        input_name,
+        actor_values,
+        {
+            'multiple'        : multiple,
+            'init'            : true,
+            'allowed_types'   : allowed_actors,
+            'aria_label'      : input_label,
+            'specific_tags': {
+                'data-glpi-conditions-editor-value': '',
+            },
+        }
+    ]) %}
 
-{{ fields.htmlField(
-    input_name,
-    actors_dropdown,
-    '',
-    {
-        'no_label'     : true,
-        'wrapper_class': '',
-        'mb'           : '',
-        'field_class'  : [
-            'me-2 value-selector flex-grow-1',
-        ]|join(' '),
-    }
-) }}
+    {{ fields.htmlField(
+        input_name,
+        actors_dropdown,
+        '',
+        {
+            'no_label'     : true,
+            'wrapper_class': '',
+            'mb'           : '',
+            'field_class'  : [
+                'me-2 value-selector flex-grow-1',
+            ]|join(' '),
+        }
+    ) }}
+{% endif %}
