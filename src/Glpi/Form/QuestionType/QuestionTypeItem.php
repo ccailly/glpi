@@ -43,6 +43,7 @@ use Glpi\Application\View\TemplateRenderer;
 use Glpi\DBAL\JsonFieldInterface;
 use Glpi\Form\Condition\ConditionHandler\ItemAsTextConditionHandler;
 use Glpi\Form\Condition\ConditionHandler\ItemConditionHandler;
+use Glpi\Form\Condition\ConditionValueAsStringProviderInterface;
 use Glpi\Form\Condition\UsedAsCriteriaInterface;
 use Glpi\Form\Export\Context\DatabaseMapper;
 use Glpi\Form\Export\Serializer\DynamicExportDataField;
@@ -61,7 +62,10 @@ use TicketRecurrent;
 use function Safe\json_decode;
 use function Safe\json_encode;
 
-class QuestionTypeItem extends AbstractQuestionType implements FormQuestionDataConverterInterface, UsedAsCriteriaInterface
+class QuestionTypeItem extends AbstractQuestionType implements
+    FormQuestionDataConverterInterface,
+    UsedAsCriteriaInterface,
+    ConditionValueAsStringProviderInterface
 {
     protected string $itemtype_aria_label;
     protected string $items_id_aria_label;
@@ -318,6 +322,25 @@ class QuestionTypeItem extends AbstractQuestionType implements FormQuestionDataC
                 new ItemAsTextConditionHandler($question_config->getItemtype()),
             ],
         );
+    }
+
+    #[Override]
+    public function getConditionValueAsString(mixed $value, ?JsonFieldInterface $question_config): string|array
+    {
+        if (
+            !is_array($value)
+            || !isset($value['itemtype'])
+            || !isset($value['items_id'])
+        ) {
+            return '';
+        }
+
+        $item = $value['itemtype']::getById($value['items_id']);
+        if ($item) {
+            return $item->getName();
+        }
+
+        return '';
     }
 
     public function exportDynamicDefaultValue(

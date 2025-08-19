@@ -37,12 +37,16 @@ namespace Glpi\Form\QuestionType;
 
 use Glpi\DBAL\JsonFieldInterface;
 use Glpi\Form\Condition\ConditionHandler\MultipleChoiceFromValuesConditionHandler;
+use Glpi\Form\Condition\ConditionValueAsStringProviderInterface;
 use Glpi\Form\Condition\UsedAsCriteriaInterface;
 use Glpi\Form\Question;
 use InvalidArgumentException;
+use LogicException;
 use Override;
 
-final class QuestionTypeCheckbox extends AbstractQuestionTypeSelectable implements UsedAsCriteriaInterface
+final class QuestionTypeCheckbox extends AbstractQuestionTypeSelectable implements
+    UsedAsCriteriaInterface,
+    ConditionValueAsStringProviderInterface
 {
     #[Override]
     public function getInputType(?Question $question): string
@@ -68,5 +72,19 @@ final class QuestionTypeCheckbox extends AbstractQuestionTypeSelectable implemen
             parent::getConditionHandlers($question_config),
             [new MultipleChoiceFromValuesConditionHandler($question_config->getOptions())]
         );
+    }
+
+    #[Override]
+    public function getConditionValueAsString(mixed $value, ?JsonFieldInterface $question_config): string|array
+    {
+        if (!is_array($value) || $question_config === null) {
+            return '';
+        }
+
+        if (!($question_config instanceof QuestionTypeSelectableExtraDataConfig)) {
+            throw new LogicException('Invalid question config');
+        }
+
+        return array_map(fn($item) => $question_config->getOptions()[$item] ?? '', $value);
     }
 }

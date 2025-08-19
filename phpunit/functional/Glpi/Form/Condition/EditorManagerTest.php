@@ -416,7 +416,7 @@ final class EditorManagerTest extends GLPITestCase
                 [
                     'uuid' => 2,
                     'name' => 'Question 2',
-                    'type' => QuestionTypeFile::class, // only support visibility conditions
+                    'type' => QuestionTypeFile::class, // only support visibility and regex conditions
                 ],
             ],
         ]);
@@ -429,6 +429,8 @@ final class EditorManagerTest extends GLPITestCase
         $this->assertEquals([
             'visible'     => __("Is visible"),
             'not_visible' => __("Is not visible"),
+            'match_regex' => 'Match regular expression',
+            'not_match_regex' => 'Do not match regular expression',
         ], $dropdown_values);
     }
 

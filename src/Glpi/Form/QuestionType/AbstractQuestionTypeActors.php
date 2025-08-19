@@ -40,6 +40,7 @@ use Exception;
 use Glpi\Application\View\TemplateRenderer;
 use Glpi\DBAL\JsonFieldInterface;
 use Glpi\Form\Condition\ConditionHandler\ActorConditionHandler;
+use Glpi\Form\Condition\ConditionValueAsStringProviderInterface;
 use Glpi\Form\Condition\UsedAsCriteriaInterface;
 use Glpi\Form\Export\Context\DatabaseMapper;
 use Glpi\Form\Export\Serializer\DynamicExportDataField;
@@ -59,7 +60,10 @@ use function Safe\json_encode;
 /**
  * "Actors" questions represent an input field for actors (requesters, ...)
  */
-abstract class AbstractQuestionTypeActors extends AbstractQuestionType implements FormQuestionDataConverterInterface, UsedAsCriteriaInterface
+abstract class AbstractQuestionTypeActors extends AbstractQuestionType implements
+    FormQuestionDataConverterInterface,
+    UsedAsCriteriaInterface,
+    ConditionValueAsStringProviderInterface
 {
     /**
      * Retrieve the allowed actor types
@@ -458,6 +462,28 @@ TWIG;
             parent::getConditionHandlers($question_config),
             [new ActorConditionHandler($this, $question_config)]
         );
+    }
+
+    #[Override]
+    public function getConditionValueAsString(mixed $value, ?JsonFieldInterface $question_config): string|array
+    {
+        if (!is_array($value)) {
+            return '';
+        }
+
+        $actors = [];
+        foreach ($value as $actor) {
+            $actor_parts = explode('-', $actor);
+            $item = getItemForForeignKeyField($actor_parts[0]);
+            $item_id = (int) $actor_parts[1];
+
+            // Check if the item exists
+            if ($item && $item->getFromDB($item_id)) {
+                $actors[] = $item->getName();
+            }
+        }
+
+        return $actors;
     }
 
     #[Override]

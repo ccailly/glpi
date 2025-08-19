@@ -39,14 +39,18 @@ use Glpi\Application\View\TemplateRenderer;
 use Glpi\DBAL\JsonFieldInterface;
 use Glpi\Form\Condition\ConditionHandler\MultipleChoiceFromValuesConditionHandler;
 use Glpi\Form\Condition\ConditionHandler\SingleChoiceFromValuesConditionHandler;
+use Glpi\Form\Condition\ConditionValueAsStringProviderInterface;
 use Glpi\Form\Condition\UsedAsCriteriaInterface;
 use Glpi\Form\Question;
 use InvalidArgumentException;
+use LogicException;
 use Override;
 
 use function Safe\json_decode;
 
-final class QuestionTypeDropdown extends AbstractQuestionTypeSelectable implements UsedAsCriteriaInterface
+final class QuestionTypeDropdown extends AbstractQuestionTypeSelectable implements
+    UsedAsCriteriaInterface,
+    ConditionValueAsStringProviderInterface
 {
     #[Override]
     public function getInputType(?Question $question): string
@@ -300,5 +304,19 @@ TWIG;
                 [new SingleChoiceFromValuesConditionHandler($options)]
             );
         }
+    }
+
+    #[Override]
+    public function getConditionValueAsString(mixed $value, ?JsonFieldInterface $question_config): array
+    {
+        if (!($question_config instanceof QuestionTypeDropdownExtraDataConfig)) {
+            throw new LogicException('Invalid question config');
+        }
+
+        if (!$question_config->isMultipleDropdown() && is_string($value)) {
+            $value = [$value];
+        }
+
+        return array_map(fn($item) => $question_config->getOptions()[$item] ?? '', $value);
     }
 }
