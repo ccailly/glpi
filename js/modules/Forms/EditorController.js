@@ -1157,7 +1157,10 @@ export class GlpiFormEditorController
     #getItemConditionDependencies(type, item) {
         const uuid = this.#getItemInput(item, "uuid");
         if (!uuid) {
-            return {}; // New item without UUID can always be deleted
+            return { // New item without UUID can always be deleted
+                conditionsUsingItem: [],
+                destinationsUsingItem: []
+            };
         }
 
         const itemIdentifier = `${type}-${uuid}`;
