@@ -35,6 +35,7 @@
 
 namespace Glpi\Form\QuestionType;
 
+use ITILCategory;
 use Override;
 
 final class QuestionTypeItemDropdownExtraDataConfig extends QuestionTypeItemExtraDataConfig
@@ -57,7 +58,7 @@ final class QuestionTypeItemDropdownExtraDataConfig extends QuestionTypeItemExtr
     public static function jsonDeserialize(array $data): self
     {
         return new self(
-            itemtype         : $data[self::ITEMTYPE] ?? null,
+            itemtype         : $data[self::ITEMTYPE] ?? ITILCategory::class,
             categories_filter: $data[self::CATEGORIES_FILTER] ?? [],
             root_items_id    : $data[self::ROOT_ITEMS_ID] ?? 0,
             subtree_depth    : $data[self::SUBTREE_DEPTH] ?? 0,

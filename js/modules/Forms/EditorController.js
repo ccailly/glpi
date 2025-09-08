@@ -84,6 +84,12 @@ export class GlpiFormEditorController
     #question_subtypes_options;
 
     /**
+     * Supported value operators for each question type
+     * @type {Object}
+     */
+    #question_supported_value_operators;
+
+    /**
      * @type {array<GlpiFormConditionVisibilityEditorController>}
      */
     #conditions_editors_controllers;
@@ -116,6 +122,7 @@ export class GlpiFormEditorController
         this.#destination_conditions         = destination_conditions;
         this.#options                        = {};
         this.#question_subtypes_options      = {};
+        this.#question_supported_value_operators = {};
         this.#conditions_editors_controllers = [];
         this.#is_readonly = is_readonly;
 
@@ -303,6 +310,11 @@ export class GlpiFormEditorController
             );
         });
 
+        // Store previous values for select elements to allow rollback
+        $(document).on('select2:selecting', (e) => {
+            $(e.target).data('previous-value', $(e.target).val());
+        });
+
         // Register handlers for each possible editor actions using custom
         // data attributes
         const events = ["click", "change", "input"];
@@ -342,6 +354,16 @@ export class GlpiFormEditorController
      */
     registerQuestionSubTypesOptions(type, options) {
         this.#question_subtypes_options[type] = options;
+    }
+
+    /**
+     * Register supported value operators for the given question type.
+     *
+     * @param {string} type      Question type
+     * @param {Array}  operators Supported value operators for the question type
+     */
+    registerQuestionTypeSupportedValueOperators(type, operators) {
+        this.#question_supported_value_operators[type] = operators;
     }
 
     /**
@@ -1088,7 +1110,7 @@ export class GlpiFormEditorController
      * @param {jQuery} question
      */
     #deleteQuestion(question) {
-        if (!this.#checkItemConditionDependencies('question', question)) {
+        if (!this.#checkItemConditionDependenciesForDeletion('question', question)) {
             return;
         }
 
@@ -1126,16 +1148,16 @@ export class GlpiFormEditorController
     }
 
     /**
-     * Check if an item is used in conditions and show modal if needed
+     * Get the conditions using a specific item
      *
      * @param {string} type Type of item ('question', 'comment', 'section')
      * @param {jQuery} item The element to check
-     * @returns {boolean} True if the item can be deleted, false otherwise
+     * @returns {array} Array of condition elements using the item
      */
-    #checkItemConditionDependencies(type, item) {
+    #getItemConditionDependencies(type, item) {
         const uuid = this.#getItemInput(item, "uuid");
         if (!uuid) {
-            return true; // New item without UUID can always be deleted
+            return {}; // New item without UUID can always be deleted
         }
 
         const itemIdentifier = `${type}-${uuid}`;
@@ -1153,9 +1175,62 @@ export class GlpiFormEditorController
                 )
             );
 
+        return {
+            conditionsUsingItem: conditionsUsingItem,
+            destinationsUsingItem: destinationsUsingItem
+        };
+    }
+
+    /**
+     * Check if an item is used in conditions and show delete modal if needed
+     *
+     * @param {string} type Type of item ('question', 'comment', 'section')
+     * @param {jQuery} item The element to check
+     * @returns {boolean} True if the item can be deleted, false otherwise
+     */
+    #checkItemConditionDependenciesForDeletion(type, item) {
+        const dependencies = this.#getItemConditionDependencies(type, item);
+
         // If the item is used in conditions, show modal and prevent deletion
-        if (conditionsUsingItem.length > 0 || destinationsUsingItem.length > 0) {
-            this.#showItemHasConditionsModal(type, conditionsUsingItem, destinationsUsingItem);
+        if (dependencies.conditionsUsingItem.length > 0 || dependencies.destinationsUsingItem.length > 0) {
+            this.#showItemHasConditionsModal(
+                type,
+                dependencies.conditionsUsingItem,
+                dependencies.destinationsUsingItem,
+                'deletion'
+            );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if an item is used in conditions and show update modal if needed
+     *
+     * @param {jQuery} item The element to check
+     * @param {string} new_question_type The new question type
+     * @returns {boolean} True if the item can be updated, false otherwise
+     */
+    #checkItemConditionDependenciesForNewQuestionType(item, new_question_type) {
+        const dependencies = this.#getItemConditionDependencies('question', item);
+        const supported_value_operators = this.#question_supported_value_operators[new_question_type];
+
+        const unsupported_conditions = dependencies.conditionsUsingItem
+            .filter((index, element) => !supported_value_operators.includes($(element)
+                .closest('[data-glpi-conditions-editor-condition]')
+                .find('[data-glpi-conditions-editor-value-operator]').val()
+            ));
+
+        const unsupported_destinations_conditions = dependencies.destinationsUsingItem;
+
+        if (unsupported_conditions.length > 0 || unsupported_destinations_conditions.length > 0) {
+            this.#showItemHasConditionsModal(
+                'question',
+                dependencies.conditionsUsingItem,
+                dependencies.destinationsUsingItem,
+                'new_question_type'
+            );
             return false;
         }
 
@@ -1169,9 +1244,9 @@ export class GlpiFormEditorController
      * @param {jQuery} conditionsUsingItem jQuery object containing condition elements
      * @param {array} destinationsUsingItem Array of destination objects
      */
-    #showItemHasConditionsModal(type, conditionsUsingItem, destinationsUsingItem) {
+    #showItemHasConditionsModal(type, conditionsUsingItem, destinationsUsingItem, modal_name) {
         // Show only the relevant header for this item type
-        $('[data-glpi-form-editor-item-has-conditions-modal-header]')
+        $(`[data-glpi-form-editor-item-has-conditions-modal=${modal_name}] [data-glpi-form-editor-item-has-conditions-modal-header]`)
             .addClass('d-none')
             .filter(`[data-glpi-form-editor-item-has-conditions-modal-header=${type}]`)
             .removeClass('d-none');
@@ -1213,10 +1288,10 @@ export class GlpiFormEditorController
         });
 
         // Render the list of elements in the modal
-        const modalList = $('[data-glpi-form-editor-item-has-conditions-list]');
+        const modalList = $(`[data-glpi-form-editor-item-has-conditions-modal=${modal_name}] [data-glpi-form-editor-item-has-conditions-list]`);
         modalList.empty();
 
-        const template = $('[data-glpi-form-editor-item-has-conditions-item-template]').html();
+        const template = $(`[data-glpi-form-editor-item-has-conditions-modal=${modal_name}] [data-glpi-form-editor-item-has-conditions-item-template]`).html();
 
         // Add each element to the list
         elementsWithConditions.forEach(data => {
@@ -1245,7 +1320,7 @@ export class GlpiFormEditorController
             e.preventDefault();
 
             // Hide modal
-            $('[data-glpi-form-editor-item-has-conditions-modal]').modal('hide');
+            $(`[data-glpi-form-editor-item-has-conditions-modal=${modal_name}]`).modal('hide');
 
             // Get the UUID and type
             const clickedElement = $(e.currentTarget);
@@ -1257,7 +1332,7 @@ export class GlpiFormEditorController
         });
 
         // Show the modal
-        $('[data-glpi-form-editor-item-has-conditions-modal]').modal('show');
+        $(`[data-glpi-form-editor-item-has-conditions-modal=${modal_name}]`).modal('show');
     }
 
     /**
@@ -1679,6 +1754,18 @@ export class GlpiFormEditorController
         const new_options = $(this.#templates)
             .find(`option[data-glpi-form-editor-question-type=${e_category}]`);
 
+        // Check if the change is allowed based on existing conditions
+        if (!this.#checkItemConditionDependenciesForNewQuestionType(question, new_options.first().val())) {
+
+            // Revert to previous value if change is not allowed
+            const previous_category = question.find('[data-glpi-form-editor-on-change="change-question-type-category"]').data('previous-value');
+            if (previous_category !== undefined) {
+                question.find('[data-glpi-form-editor-on-change="change-question-type-category"]').val(previous_category).trigger('change.select2');
+            }
+
+            return false;
+        }
+
         // Remove current types options
         const types_select = question
             .find("[data-glpi-form-editor-question-type-selector]");
@@ -1716,6 +1803,18 @@ export class GlpiFormEditorController
 
         // Nothing to do if the type is the same
         if (old_type === type) {
+            return;
+        }
+
+        // Check if the change is allowed based on existing conditions
+        if (!this.#checkItemConditionDependenciesForNewQuestionType(question, type)) {
+
+            // Revert to previous value if change is not allowed
+            const previous_type = question.find('[data-glpi-form-editor-on-change="change-question-type"]').data('previous-value');
+            if (previous_type !== undefined) {
+                question.find('[data-glpi-form-editor-on-change="change-question-type"]').val(previous_type).trigger('change.select2');
+            }
+
             return;
         }
 
@@ -1918,7 +2017,7 @@ export class GlpiFormEditorController
      * @param {jQuery} section
      */
     #deleteSection(section) {
-        if (!this.#checkItemConditionDependencies('section', section)) {
+        if (!this.#checkItemConditionDependenciesForDeletion('section', section)) {
             return;
         }
 
@@ -1987,7 +2086,7 @@ export class GlpiFormEditorController
      * @param {jQuery} comment
      */
     #deleteComment(comment) {
-        if (!this.#checkItemConditionDependencies('comment', comment)) {
+        if (!this.#checkItemConditionDependenciesForDeletion('comment', comment)) {
             return;
         }
 

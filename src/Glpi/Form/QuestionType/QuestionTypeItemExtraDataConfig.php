@@ -35,6 +35,7 @@
 
 namespace Glpi\Form\QuestionType;
 
+use Computer;
 use Glpi\DBAL\JsonFieldInterface;
 use Override;
 
@@ -51,7 +52,7 @@ class QuestionTypeItemExtraDataConfig implements JsonFieldInterface
     public static function jsonDeserialize(array $data): self
     {
         return new self(
-            itemtype: $data[self::ITEMTYPE] ?? null,
+            itemtype: $data[self::ITEMTYPE] ?? Computer::class,
         );
     }
 

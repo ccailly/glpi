@@ -385,7 +385,8 @@
     {{ include('pages/admin/form/move_section_modal.html.twig') }}
 
     {# Block has conditions modal #}
-    {{ include('pages/admin/form/item_has_conditions_modal.html.twig') }}
+    {{ include('pages/admin/form/item_has_conditions_for_deletion_modal.html.twig') }}
+    {{ include('pages/admin/form/item_has_conditions_for_new_question_type_modal.html.twig') }}
 </form>
 
 {% if can_update %}
@@ -512,6 +513,12 @@
                 }
             )
         {% endif %}
+
+        {% set default_config = call(question_type.getExtraDataConfigClass() ~ '::jsonDeserialize', [[]]) %}
+        controller.registerQuestionTypeSupportedValueOperators(
+            '{{ get_class(question_type)|e('js') }}',
+            {{ question_type.getSupportedValueOperators(default_config)|json_encode|raw }}
+        );
     {% endfor %}
 
     $(container_selector).data('controller', controller);
