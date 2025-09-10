@@ -36,15 +36,15 @@
 {% embed "pages/admin/form/item_has_conditions_modal_base.html.twig" %}
     {% block modal_headers %}
         <div class="d-none" data-glpi-form-editor-item-has-conditions-modal-header="question">
-            <h3 class="m-0">{{ __("This question is used in conditions of other form elements") }}</h3>
+            <h3 class="mb-2">{{ __("This question is used in conditions of other form elements") }}</h3>
             <p class="m-0 text-muted">{{ __("You must delete related conditions before deleting this question") }}</p>
         </div>
         <div class="d-none" data-glpi-form-editor-item-has-conditions-modal-header="comment">
-            <h3 class="m-0">{{ __("This comment is used in conditions of other form elements") }}</h3>
+            <h3 class="mb-2">{{ __("This comment is used in conditions of other form elements") }}</h3>
             <p class="m-0 text-muted">{{ __("You must delete related conditions before deleting this comment") }}</p>
         </div>
         <div class="d-none" data-glpi-form-editor-item-has-conditions-modal-header="section">
-            <h3 class="m-0">{{ __("This section is used in conditions of other form elements") }}</h3>
+            <h3 class="mb-2">{{ __("This section is used in conditions of other form elements") }}</h3>
             <p class="m-0 text-muted">{{ __("You must delete related conditions before deleting this section") }}</p>
         </div>
     {% endblock %}

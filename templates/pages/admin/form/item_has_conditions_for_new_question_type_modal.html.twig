@@ -36,7 +36,7 @@
 {% embed "pages/admin/form/item_has_conditions_modal_base.html.twig" %}
     {% block modal_headers %}
         <div class="d-none" data-glpi-form-editor-item-has-conditions-modal-header="question">
-            <h3 class="m-0">{{ __("This question is used in the conditions of other form elements with a value operator that is not available with the new type") }}</h3>
+            <h3 class="mb-2">{{ __("This question is used in the conditions of other form elements with a value operator that is not available for the new selected type") }}</h3>
             <p class="m-0 text-muted">{{ __("You must delete/edit related conditions before changing the type of this question") }}</p>
         </div>
     {% endblock %}
