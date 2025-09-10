@@ -87,8 +87,10 @@ final class UserDevicesConditionHandler implements ConditionHandlerInterface
         mixed $b,
     ): bool {
         // Handle new operators that might be available through enhanced configuration
-        if ($this->handleExtendedOperators($a, $operator, $b, $handled)) {
-            return $handled;
+        $handled = false;
+        $result = $this->handleExtendedOperators($a, $operator, $b, $handled);
+        if ($handled) {
+            return $result;
         }
 
         if ($this->config->isMultipleDevices()) {
@@ -115,15 +117,22 @@ final class UserDevicesConditionHandler implements ConditionHandlerInterface
     ): bool {
         $handled = true;
 
-        return match ($operator) {
+        $result = match ($operator) {
             ValueOperator::EQUALS => $this->applyEqualsOperator($a, $b),
             ValueOperator::NOT_EQUALS => !$this->applyEqualsOperator($a, $b),
             ValueOperator::CONTAINS => $this->applyContainsOperator($a, $b),
             ValueOperator::NOT_CONTAINS => !$this->applyContainsOperator($a, $b),
             ValueOperator::EMPTY => $this->applyEmptyOperator($a),
             ValueOperator::NOT_EMPTY => !$this->applyEmptyOperator($a),
-            default => $handled = false, // Not handled by extended operators
+            default => null, // Not handled by extended operators
         };
+
+        if ($result === null) {
+            $handled = false;
+            return false;
+        }
+
+        return $result;
     }
 
     /**
