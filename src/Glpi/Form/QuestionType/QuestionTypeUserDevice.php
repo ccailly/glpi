@@ -41,6 +41,7 @@ use Glpi\Application\View\TemplateRenderer;
 use Glpi\DBAL\JsonFieldInterface;
 use Glpi\Form\Condition\ConditionHandler\UserDevicesAsTextConditionHandler;
 use Glpi\Form\Condition\ConditionHandler\UserDevicesConditionHandler;
+use Glpi\Form\Condition\ConditionHandler\UserDevicesConditionHandlerConfig;
 use Glpi\Form\Condition\ConditionValueTransformerInterface;
 use Glpi\Form\Condition\UsedAsCriteriaInterface;
 use Glpi\Form\Question;
@@ -307,10 +308,61 @@ TWIG;
         return array_merge(
             parent::getConditionHandlers($question_config),
             [
+                // Primary handler with backward-compatible interface
                 new UserDevicesConditionHandler($question_config->isMultipleDevices()),
+                // Text-based handler for compatibility
                 new UserDevicesAsTextConditionHandler($question_config),
             ]
         );
+    }
+
+    /**
+     * Get condition handlers with enhanced configuration.
+     * This method demonstrates how to use the enhanced UserDevicesConditionHandler
+     * with additional context and parameters.
+     *
+     * @param JsonFieldInterface|null $question_config
+     * @param string|null $context Additional context for operator selection
+     * @param array|null $additional_parameters Additional parameters for advanced configuration
+     * @return array
+     */
+    public function getEnhancedConditionHandlers(
+        ?JsonFieldInterface $question_config,
+        ?string $context = null,
+        ?array $additional_parameters = null
+    ): array {
+        if (!$question_config instanceof QuestionTypeUserDevicesConfig) {
+            throw new InvalidArgumentException();
+        }
+
+        $base_handlers = parent::getConditionHandlers($question_config);
+
+        if ($context !== null || $additional_parameters !== null) {
+            // Use enhanced configuration
+            if ($context !== null) {
+                $enhanced_config = UserDevicesConditionHandlerConfig::withContext(
+                    $question_config->isMultipleDevices(),
+                    $context,
+                    $additional_parameters
+                );
+            } else {
+                $enhanced_config = new UserDevicesConditionHandlerConfig(
+                    is_multiple_devices: $question_config->isMultipleDevices(),
+                    additional_parameters: $additional_parameters
+                );
+            }
+
+            return array_merge(
+                $base_handlers,
+                [
+                    new UserDevicesConditionHandler($enhanced_config),
+                    new UserDevicesAsTextConditionHandler($question_config),
+                ]
+            );
+        }
+
+        // Fallback to standard handlers
+        return $this->getConditionHandlers($question_config);
     }
 
     #[Override]
