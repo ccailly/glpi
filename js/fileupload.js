@@ -49,8 +49,12 @@ function uploadFile(file, editor) {
         uploader = $(editor.getElement()).closest('form').find('[data-uploader-name="filename"]');
     }
     if (uploader.length === 0) {
+        // Fallback to an uploader found in the parent element
+        uploader = $(editor.getElement()).parent().find('[data-uploader-name]');
+    }
+    if (uploader.length === 0) {
         // Fallback to any uploader found in current form
-        uploader = $(editor.getElement()).closest('form').find('[data-uploader-name=]').first();
+        uploader = $(editor.getElement()).closest('form').find('[data-uploader-name]').first();
     }
 
     uploader.fileupload('add', {files: [file]});
@@ -67,7 +71,7 @@ var handleUploadedFile = function (files, files_data, input_name, container, edi
                 $.each(
                     files,
                     (index, file) => {
-                        if (files_data[index].error !== undefined) {
+                        if ((files_data[index].error ?? false) !== false) {
                             container.parent().find('.uploadbar')
                                 .text(files_data[index].error)
                                 .css('width', '100%');

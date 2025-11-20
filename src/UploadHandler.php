@@ -575,6 +575,8 @@ class UploadHandler
      */
     protected function validate_image_file($uploaded_file, $file, $error, $index)
     {
+        $a = $this->imagetype($uploaded_file);
+        $b = $this->get_file_type($file->name);
         if ($this->imagetype($uploaded_file) !== $this->get_file_type($file->name)) {
             $file->error = $this->get_error_message('invalid_file_type');
             return false;

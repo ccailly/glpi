@@ -1149,4 +1149,101 @@ describe ('Form editor', () => {
         cy.findByRole('button', {'name': 'Save'}).click();
         cy.checkAndCloseAlert('Item successfully updated');
     });
+
+    it.only('can set question description with image and duplicate it', () => {
+        cy.login();
+        cy.importForm('form-with-sections-questions-and-comments.json').visitFormTab('Form');
+
+        cy.findByRole('option', {'name': 'Question 1 in section 1'}).as('question_1_section_1');
+        cy.get('@question_1_section_1').click();
+        cy.get('@question_1_section_1').findByLabelText("Question description")
+            .awaitTinyMCE()
+            .click()
+        ;
+
+        const imageData = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEMAAABHBAMAAACudedWAAAAG1BMVEX///8/Pz/f399/f39fX1+fn58fHx+/v78AAABAUHQoAAAAAXRSTlMAQObYZgAAAPJJREFUSIntlL0OgjAURq/8+hgao3E0To5OxpHJOCIxyMjoaFTwe2xLS20pGBhN7Lfc03CS3t42ENn8ScI071MCxH3KGDerdCv+DudIrBiePljmUikyACX/ECr0GcZSEXlUiw3Hp0RDwYrIrXErUG0ErGkGFERXhccKP+0iYWWBkijDRWGinQgTVhwg8oFc4URTeKOsva0nGhX40Ody53WJOMBL4b09XVY7cKgS6BtJbCqeandU49FQ/MahOWaGUg+pmpcjcApTMac+z1qKq67Rk1dqKPUL4J3uvyjGO0J5qM4f6wqZDzNMowE/Axsbm1/MG8STlzANM6dlAAAAAElFTkSuQmCC';
+
+        // Simulate paste event with image
+        cy.get('@question_1_section_1').findByLabelText("Question description").awaitTinyMCE().then($destination => {
+            // Create a File object from base64 data
+            fetch(imageData)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'test-image.png', { type: 'image/png' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+
+                    const pasteEvent = new ClipboardEvent('paste', {
+                        bubbles: true,
+                        cancelable: true,
+                        clipboardData: dataTransfer
+                    });
+
+                    $destination[0].dispatchEvent(pasteEvent);
+                });
+        });
+
+        cy.intercept('POST', '/ajax/fileupload.php').as('fileUpload');
+
+        // Wait for the upload to complete
+        cy.wait('@fileUpload').then((interception) => {
+            expect(interception.response.statusCode).to.eq(200);
+            expect(interception.response.body).to.have.property('_uploader_description');
+            expect(interception.response.body._uploader_description).to.be.an('array').that.is.not.empty;
+            console.log(interception.response.body);
+        });
+
+        // Save the form
+        cy.findByRole('button', {'name': 'Save'}).click();
+        cy.checkAndCloseAlert('Item successfully updated');
+
+        // Duplicate the question
+        cy.get('@question_1_section_1').findByRole('button', {'name': 'Duplicate question'}).click();
+
+        // Verify that the duplicated question contains the image in its description
+        cy.findAllByRole('region', {'name': 'Question details'}).eq(1).as('duplicated_question');
+        cy.get('@duplicated_question').click();
+        cy.get('@duplicated_question').findByLabelText("Question description").awaitTinyMCE().within(() => {
+            cy.get('img').should('have.attr', 'src').and('include', 'blob:http://');
+        });
+
+        // Add another image to the duplicated question description
+        cy.get('@duplicated_question').findByLabelText("Question description").awaitTinyMCE().then($destination => {
+            // Create a File object from base64 data
+            fetch(imageData)
+                .then(res => res.blob())
+                .then(blob => {
+                    const file = new File([blob], 'test-image-2.png', { type: 'image/png' });
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.items.add(file);
+
+                    const pasteEvent = new ClipboardEvent('paste', {
+                        bubbles: true,
+                        cancelable: true,
+                        clipboardData: dataTransfer
+                    });
+
+                    $destination[0].dispatchEvent(pasteEvent);
+                });
+        });
+
+        cy.intercept('POST', '/ajax/fileupload.php').as('fileUpload2');
+
+        // Wait for the upload to complete
+        cy.wait('@fileUpload2').then((interception) => {
+            expect(interception.response.statusCode).to.eq(200);
+            expect(interception.response.body).to.have.property('_uploader_description');
+            expect(interception.response.body._uploader_description).to.be.an('array').that.is.not.empty;
+        });
+
+        // Save the form again
+        cy.saveFormEditorAndReload();
+
+        // Verify that images are present and aren't encoded as base64
+        cy.findAllByRole('region', {'name': 'Question details'}).eq(0).within(() => {
+            cy.findByLabelText("Question description").awaitTinyMCE().within(() => {
+                cy.get('img').should('have.attr', 'src').and('include', '/front/document.send.php?');
+            });
+        });
+    });
 });

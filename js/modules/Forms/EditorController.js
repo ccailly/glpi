@@ -699,6 +699,11 @@ export class GlpiFormEditorController
         inputs.each((index, input) => {
             const name = $(input).attr("name");
 
+            if ($(input).attr('data-form-data')) {
+                // Skip inputs for fileupload, they are handled later
+                return;
+            }
+
             // Input was never parsed before, store its original name
             if (!$(input).data("glpi-form-editor-original-name")) {
                 $(input).attr("data-glpi-form-editor-original-name", name);
@@ -742,6 +747,31 @@ export class GlpiFormEditorController
                 "name",
                 `${base_input_index}[${field}]${postfix}`
             );
+
+            // If the input is for fileupload, we need to escape the name
+            // if ($(input).attr('data-form-data')) {
+            //     const uuid = this.#getItemInput(item, 'uuid');
+
+            //     // Rebuild the name without brackets
+            //     $(input).attr('name', uuid + postfix);
+
+            //     // Update the fileupload formData name too if needed
+            //     if ($(input).data('blueimp-fileupload') !== undefined) {
+            //         $(input).fileupload('option', 'formData').name = uuid;
+            //     }
+
+            //     // Update the name object attribute in the data-form-data attribute
+            //     const form_data = JSON.parse($(input).attr('data-form-data'));
+            //     form_data.name = uuid;
+            //     $(input).attr('data-form-data', JSON.stringify(form_data));
+
+            //     // Update fileupload_configs to keep it in sync
+            //     const fileupload_config = window.fileupload_configs[$(input).attr('id')];
+            //     if (fileupload_config !== undefined) {
+            //         fileupload_config.name = uuid;
+            //         window.fileupload_configs[$(input).attr('id')] = fileupload_config;
+            //     }
+            // }
         });
     }
 
@@ -1652,6 +1682,23 @@ export class GlpiFormEditorController
             labels.each(function() {
                 $(this).attr('for', new_id);
             });
+        });
+
+        copy.find('div.fileupload > input[id][data-form-data]').each(function() {
+            const id = $(this).attr('id');
+            const rand = getUUID();
+            const new_id = `${id}_${rand}`;
+
+            // Update input id to make it unique
+            $(this).attr('id', new_id);
+
+            // Add new fileupload config if needed
+            const config = window.fileupload_configs[id];
+            if (config !== undefined) {
+                // Update fileupload config to use the new ID
+                window.fileupload_configs[new_id] = config;
+                window.fileupload_configs[new_id].field_id = new_id;
+            }
         });
 
         // Insert the new question

@@ -409,6 +409,11 @@ final class Question extends CommonDBChild implements BlockInterface, Conditiona
         $input = $this->removeSavedConditionsIfAlwaysVisible($input);
         $input = $this->removeSavedConditionsIfNoValidation($input);
 
+        $input = $this->addFiles($input, [
+            'name' => 'description',
+            'content_field' => 'description',
+        ]);
+
         return $input;
     }
 

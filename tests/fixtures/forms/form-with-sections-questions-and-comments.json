@@ -1,0 +1,164 @@
+{
+    "version": 1,
+    "forms": [
+        {
+            "id": 16,
+            "uuid": "e16556aa-9d7b-429a-abc4-64a56904e1cb",
+            "name": "Form with sections, questions and comments",
+            "header": null,
+            "description": null,
+            "entity_name": "Root entity > E2ETestEntity",
+            "is_recursive": true,
+            "is_active": false,
+            "submit_button_visibility_strategy": "",
+            "illustration": "",
+            "submit_button_conditions": [],
+            "sections": [
+                {
+                    "id": 17,
+                    "uuid": "fe57b79d-6344-4e97-b2e3-d7a536abdf05",
+                    "name": "Section 1",
+                    "description": null,
+                    "rank": 0,
+                    "visibility_strategy": "",
+                    "conditions": []
+                },
+                {
+                    "id": 18,
+                    "uuid": "8c6164af-4e3f-4caf-b9ef-1f70089d6d6a",
+                    "name": "Section 2",
+                    "description": "",
+                    "rank": 1,
+                    "visibility_strategy": "",
+                    "conditions": []
+                }
+            ],
+            "comments": [
+                {
+                    "id": 1,
+                    "uuid": "8ae5b225-66ff-406f-82d1-d3db29411707",
+                    "name": "Comment 1 in section 1",
+                    "description": "",
+                    "vertical_rank": 2,
+                    "horizontal_rank": null,
+                    "section_id": 17,
+                    "visibility_strategy": "",
+                    "conditions": []
+                },
+                {
+                    "id": 2,
+                    "uuid": "ed89925f-6fd0-405b-ad81-e0788382055e",
+                    "name": "Comment 1 in section 2",
+                    "description": "",
+                    "vertical_rank": 2,
+                    "horizontal_rank": null,
+                    "section_id": 18,
+                    "visibility_strategy": "",
+                    "conditions": []
+                }
+            ],
+            "questions": [
+                {
+                    "id": 33,
+                    "uuid": "e6063c8e-fdaa-4f58-a020-34d9575aebd6",
+                    "name": "Question 1 in section 1",
+                    "type": "Glpi\\Form\\QuestionType\\QuestionTypeShortText",
+                    "is_mandatory": false,
+                    "vertical_rank": 0,
+                    "horizontal_rank": null,
+                    "description": "",
+                    "default_value": "",
+                    "extra_data": null,
+                    "section_id": 17,
+                    "visibility_strategy": "",
+                    "validation_strategy": "",
+                    "conditions": [],
+                    "validation_conditions": []
+                },
+                {
+                    "id": 34,
+                    "uuid": "9aa3c532-35ce-4dc2-8c91-99bbdab8cae5",
+                    "name": "Question 2 in section 2",
+                    "type": "Glpi\\Form\\QuestionType\\QuestionTypeShortText",
+                    "is_mandatory": false,
+                    "vertical_rank": 1,
+                    "horizontal_rank": null,
+                    "description": "",
+                    "default_value": "",
+                    "extra_data": null,
+                    "section_id": 17,
+                    "visibility_strategy": "",
+                    "validation_strategy": "",
+                    "conditions": [],
+                    "validation_conditions": []
+                },
+                {
+                    "id": 35,
+                    "uuid": "dc828445-2eb7-41cb-afc4-e0edbb91a1c6",
+                    "name": "Question 1 in section 2",
+                    "type": "Glpi\\Form\\QuestionType\\QuestionTypeShortText",
+                    "is_mandatory": false,
+                    "vertical_rank": 0,
+                    "horizontal_rank": null,
+                    "description": "",
+                    "default_value": "",
+                    "extra_data": null,
+                    "section_id": 18,
+                    "visibility_strategy": "",
+                    "validation_strategy": "",
+                    "conditions": [],
+                    "validation_conditions": []
+                },
+                {
+                    "id": 36,
+                    "uuid": "9160fc50-755b-456d-a870-17f258d0e834",
+                    "name": "Question 2 in section 2",
+                    "type": "Glpi\\Form\\QuestionType\\QuestionTypeShortText",
+                    "is_mandatory": false,
+                    "vertical_rank": 1,
+                    "horizontal_rank": null,
+                    "description": "",
+                    "default_value": "",
+                    "extra_data": null,
+                    "section_id": 18,
+                    "visibility_strategy": "",
+                    "validation_strategy": "",
+                    "conditions": [],
+                    "validation_conditions": []
+                }
+            ],
+            "policies": [
+                {
+                    "strategy": "Glpi\\Form\\AccessControl\\ControlType\\AllowList",
+                    "config": {
+                        "user_ids": [
+                            "all"
+                        ],
+                        "group_ids": [],
+                        "profile_ids": []
+                    },
+                    "is_active": true
+                }
+            ],
+            "destinations": [
+                {
+                    "id": 10,
+                    "itemtype": "Glpi\\Form\\Destination\\FormDestinationTicket",
+                    "name": "Ticket",
+                    "config": [],
+                    "creation_strategy": "",
+                    "conditions": []
+                }
+            ],
+            "translations": [],
+            "data_requirements": [
+                {
+                    "itemtype": "Entity",
+                    "name": "Root entity > E2ETestEntity"
+                }
+            ],
+            "custom_types_requirements": [],
+            "plugin_requirements": []
+        }
+    ]
+}

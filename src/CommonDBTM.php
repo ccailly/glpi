@@ -5661,7 +5661,9 @@ class CommonDBTM extends CommonGLPI
                     }
                 }
 
-                $docitem->add($toadd);
+                if (!$docitem->alreadyExists($toadd)) {
+                    $docitem->add($toadd);
+                }
             }
             // Only notification for the first New doc
             $donotif = false;
