@@ -678,10 +678,7 @@ export class FormPage extends GlpiPage
         await this.page.getByRole('listbox').focus();
         await this.page.keyboard.type(value);
         await expect(
-            this.page.getByRole('listbox').getByRole('option', { name: value })
-        ).toHaveCount(0);
-        await expect(
-            this.page.getByRole('listbox').getByRole('listitem', { name: value })
+            this.page.getByRole('listbox').getByText(value, { exact: true })
         ).toHaveCount(0);
         await this.page.keyboard.press('Escape');
     }
