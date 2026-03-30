@@ -52,6 +52,8 @@ use Glpi\Tests\FormBuilder;
 use Group;
 use Override;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Profile;
+use Profile_User;
 use Session;
 use Supplier;
 use Ticket;
@@ -245,6 +247,55 @@ final class AssigneeFieldTest extends AbstractActorFieldTest
             ),
             answers: [],
             expected_actors: [['items_id' => $user->getID()], ['items_id' => $group->getID()], ['items_id' => $supplier->getID()]]
+        );
+    }
+
+    public function testSpecificActorsExcludesUnauthorizedActors(): void
+    {
+        $form = $this->createAndGetFormWithMultipleActorsQuestions();
+        $entities_id = $this->getTestRootEntity(only_id: true);
+        $authorized_user = $this->createItem(User::class, [
+            'name' => 'testSpecificActorsExcludesUnauthorizedActors Authorized user',
+        ]);
+        $this->createItem(Profile_User::class, [
+            'users_id'    => $authorized_user->getID(),
+            'profiles_id' => getItemByTypeName(Profile::class, 'Technician', true),
+            'entities_id' => $entities_id,
+        ]);
+        $unauthorized_user = $this->createItem(User::class, [
+            'name' => 'testSpecificActorsExcludesUnauthorizedActors Unauthorized user',
+        ]);
+        $authorized_group = $this->createItem(Group::class, [
+            'name'      => 'testSpecificActorsExcludesUnauthorizedActors Authorized group',
+            'is_assign' => 1,
+        ]);
+        $unauthorized_group = $this->createItem(Group::class, [
+            'name'      => 'testSpecificActorsExcludesUnauthorizedActors Unauthorized group',
+            'is_assign' => 0,
+        ]);
+        $supplier = $this->createItem(Supplier::class, [
+            'name'       => 'testSpecificActorsExcludesUnauthorizedActors Supplier',
+            'entities_id' => $entities_id,
+        ]);
+
+        $this->sendFormAndAssertTicketActors(
+            form: $form,
+            config: new AssigneeFieldConfig(
+                strategies: [ITILActorFieldStrategy::SPECIFIC_VALUES],
+                specific_itilactors_ids: [
+                    User::getForeignKeyField() . '-' . $authorized_user->getID(),
+                    User::getForeignKeyField() . '-' . $unauthorized_user->getID(),
+                    Group::getForeignKeyField() . '-' . $authorized_group->getID(),
+                    Group::getForeignKeyField() . '-' . $unauthorized_group->getID(),
+                    Supplier::getForeignKeyField() . '-' . $supplier->getID(),
+                ]
+            ),
+            answers: [],
+            expected_actors: [
+                ['items_id' => $authorized_user->getID()],
+                ['items_id' => $authorized_group->getID()],
+                ['items_id' => $supplier->getID()],
+            ]
         );
     }
 
