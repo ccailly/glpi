@@ -186,7 +186,7 @@ for (const actor_type of actor_types) {
             }
         });
 
-        test('Cannot select unauthorized actors with "Specific actors"', async ({ page }) => {
+        test('Cannot select unauthorized actors with "Specific actors"', async () => {
             await form_page.doOpenDestinationAccordionItem('Actors');
 
             const config = form_page.getRegion(`${actor_type.name}s configuration`);
@@ -196,18 +196,10 @@ for (const actor_type of actor_types) {
             const actors_dropdown = form_page.getDropdownByLabel('Select actors...', config);
             await form_page.doSearchAndClickDropdownValue(actors_dropdown, authorized_group_name, false);
 
-            await actors_dropdown.click();
-            await page.keyboard.type(unauthorized_group_name);
-            await expect(page.getByRole('listbox').getByRole('option', { name: unauthorized_group_name })).toHaveCount(0);
-            await expect(page.getByRole('listbox').getByRole('listitem', { name: unauthorized_group_name })).toHaveCount(0);
-            await page.keyboard.press('Escape');
+            await form_page.doAssertDropdownValueIsNotAvailable(actors_dropdown, unauthorized_group_name);
 
             if (actor_type.name === 'Assignee') {
-                await actors_dropdown.click();
-                await page.keyboard.type(unauthorized_actor_name);
-                await expect(page.getByRole('listbox').getByRole('option', { name: unauthorized_actor_name })).toHaveCount(0);
-                await expect(page.getByRole('listbox').getByRole('listitem', { name: unauthorized_actor_name })).toHaveCount(0);
-                await page.keyboard.press('Escape');
+                await form_page.doAssertDropdownValueIsNotAvailable(actors_dropdown, unauthorized_actor_name);
             }
         });
 

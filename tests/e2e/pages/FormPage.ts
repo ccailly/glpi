@@ -670,6 +670,21 @@ export class FormPage extends GlpiPage
         await this.page.goto(href);
     }
 
+    public async doAssertDropdownValueIsNotAvailable(
+        dropdown: Locator,
+        value: string,
+    ): Promise<void> {
+        await dropdown.click();
+        await this.page.keyboard.type(value);
+        await expect(
+            this.page.getByRole('listbox').getByRole('option', { name: value })
+        ).toHaveCount(0);
+        await expect(
+            this.page.getByRole('listbox').getByRole('listitem', { name: value })
+        ).toHaveCount(0);
+        await this.page.keyboard.press('Escape');
+    }
+
     public getValidationErrorMessage(textbox: Locator): Locator
     {
         // eslint-disable-next-line playwright/no-raw-locators
