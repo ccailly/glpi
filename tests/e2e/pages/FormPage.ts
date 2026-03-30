@@ -675,6 +675,7 @@ export class FormPage extends GlpiPage
         value: string,
     ): Promise<void> {
         await dropdown.click();
+        await this.page.getByRole('listbox').focus();
         await this.page.keyboard.type(value);
         await expect(
             this.page.getByRole('listbox').getByRole('option', { name: value })

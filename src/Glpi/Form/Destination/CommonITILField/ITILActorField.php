@@ -215,7 +215,7 @@ abstract class ITILActorField extends AbstractConfigField implements Destination
 
             $form = $answers_set->getItem();
             $entities_id = $form instanceof Form ? $form->getEntityID() : 0;
-            if ($entities_id <= 0) {
+            if ($entities_id < 0) {
                 return false;
             }
 
