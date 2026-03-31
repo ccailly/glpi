@@ -936,7 +936,7 @@ final class AssigneeFieldTest extends AbstractActorFieldTest
 
         // Check actors
         $actors = $ticket->getActorsForType(CommonITILActor::ASSIGN);
-        $this->assertGreaterThanOrEqual(count($expected_actors), count($actors));
+        $this->assertSameSize($expected_actors, $actors);
         foreach ($expected_actors as $expected_actor) {
             $actor = array_shift($actors);
             $this->assertIsArray($actor);
