@@ -160,7 +160,11 @@ final class AssigneeFieldTest extends AbstractActorFieldTest
         // Login is required to assign actors
         $this->login();
 
-        $supervisor = $this->createItem(User::class, ['name' => 'testAssigneeFormFillerSupervisor Supervisor']);
+        $technician_profiles_id = getItemByTypeName(Profile::class, 'Technician', true);
+        $supervisor = $this->createItem(User::class, [
+            'name' => 'testAssigneeFormFillerSupervisor Supervisor',
+            '_profiles_id' => $technician_profiles_id,
+        ]);
         $form = $this->createAndGetFormWithMultipleActorsQuestions();
         $form_filler_supervisor_config = new AssigneeFieldConfig(
             [ITILActorFieldStrategy::FORM_FILLER_SUPERVISOR]
@@ -200,8 +204,15 @@ final class AssigneeFieldTest extends AbstractActorFieldTest
         $this->login();
 
         $form = $this->createAndGetFormWithMultipleActorsQuestions();
-        $user = $this->createItem(User::class, ['name' => 'testSpecificActors User']);
-        $group = $this->createItem(Group::class, ['name' => 'testSpecificActors Group']);
+        $technician_profiles_id = getItemByTypeName(Profile::class, 'Technician', true);
+        $user = $this->createItem(User::class, [
+            'name' => 'testSpecificActors User',
+            '_profiles_id' => $technician_profiles_id,
+        ]);
+        $group = $this->createItem(Group::class, [
+            'name' => 'testSpecificActors Group',
+            'is_assign' => 1,
+        ]);
         $supplier = $this->createItem(Supplier::class, [
             'name' => 'testSpecificActors Supplier',
             'entities_id' => $this->getTestRootEntity(true),
@@ -580,9 +591,19 @@ final class AssigneeFieldTest extends AbstractActorFieldTest
         $this->login();
 
         $form = $this->createAndGetFormWithMultipleActorsQuestions();
-        $user1 = $this->createItem(User::class, ['name' => 'testMultipleStrategies User 1']);
-        $user2 = $this->createItem(User::class, ['name' => 'testMultipleStrategies User 2']);
-        $group = $this->createItem(Group::class, ['name' => 'testMultipleStrategies Group']);
+        $technician_profiles_id = getItemByTypeName(Profile::class, 'Technician', true);
+        $user1 = $this->createItem(User::class, [
+            'name' => 'testMultipleStrategies User 1',
+            '_profiles_id' => $technician_profiles_id,
+        ]);
+        $user2 = $this->createItem(User::class, [
+            'name' => 'testMultipleStrategies User 2',
+            '_profiles_id' => $technician_profiles_id,
+        ]);
+        $group = $this->createItem(Group::class, [
+            'name' => 'testMultipleStrategies Group',
+            'is_assign' => 1,
+        ]);
         $supplier = $this->createItem(Supplier::class, [
             'name' => 'testMultipleStrategies Supplier',
             'entities_id' => $this->getTestRootEntity(true),
@@ -915,8 +936,10 @@ final class AssigneeFieldTest extends AbstractActorFieldTest
 
         // Check actors
         $actors = $ticket->getActorsForType(CommonITILActor::ASSIGN);
+        $this->assertGreaterThanOrEqual(count($expected_actors), count($actors));
         foreach ($expected_actors as $expected_actor) {
             $actor = array_shift($actors);
+            $this->assertIsArray($actor);
             $this->assertArrayIsEqualToArrayOnlyConsideringListOfKeys(
                 $expected_actor,
                 $actor,
