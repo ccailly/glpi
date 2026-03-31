@@ -175,6 +175,12 @@ abstract class ITILActorField extends AbstractConfigField implements Destination
         return $input;
     }
 
+    /**
+     * @return array{
+     *     right_for_users?: string,
+     *     group_conditions?: array<string, int>
+     * }
+     */
     private function getActorDropdownOptions(): array
     {
         return match ($this->getActorType()) {
@@ -194,6 +200,14 @@ abstract class ITILActorField extends AbstractConfigField implements Destination
         };
     }
 
+    /**
+     * @param array{
+     *     itemtype?: class-string<\CommonDBTM>|string,
+     *     items_id?: int|string,
+     *     use_notification?: int|string,
+     *     alternative_email?: string
+     * } $itilactor
+     */
     private function isActorAllowed(array $itilactor, AnswersSet $answers_set): bool
     {
         if (!isset($itilactor['itemtype'], $itilactor['items_id'])) {
