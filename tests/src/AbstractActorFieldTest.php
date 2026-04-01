@@ -35,8 +35,8 @@
 namespace Glpi\Tests;
 
 use Computer;
-use Glpi\Form\Destination\CommonITILField\AssigneeField;
 use Glpi\Asset\AssetDefinition;
+use Glpi\Form\Destination\CommonITILField\AssigneeField;
 use Glpi\Form\Destination\CommonITILField\ITILActorFieldConfig;
 use Glpi\Form\Destination\CommonITILField\ITILActorFieldStrategy;
 use Glpi\Form\Form;
