@@ -356,6 +356,9 @@ enum ITILActorFieldStrategy: string
             $actors = array_merge_recursive($actors, $actors_ids);
         }
 
+        // When no answer was found for any of the specified questions (e.g. they
+        // were hidden by conditional visibility), return null so that subsequent
+        // strategies can act as a fallback.
         if (!$answer_found) {
             return null;
         }

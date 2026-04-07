@@ -501,7 +501,7 @@ final class RequesterFieldTest extends AbstractActorFieldTest
     {
         $form = $this->createAndGetFormWithMultipleActorsQuestions();
         $auth = $this->login();
-        $fallback_user = $this->createItem(User::class, ['name' => 'testSpecificAnswersFallbackToFormFiller User']);
+        $fallback_user = $this->createItem(User::class, ['name' => 'Fallback requester user']);
 
         $config = new RequesterFieldConfig(
             strategies: [
