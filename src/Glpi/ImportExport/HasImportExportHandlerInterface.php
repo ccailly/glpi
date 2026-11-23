@@ -33,39 +33,17 @@
  * ---------------------------------------------------------------------
  */
 
-namespace Glpi\Form\Export\Result;
+namespace Glpi\ImportExport;
 
-use Glpi\Form\Form;
-
-final class ImportResult
+/**
+ * An itemtype that goes through the generic import/export wizard, its "Export"
+ * massive action and its "Import" menu link, but brings its own serializer
+ * instead of declaring an {@see ExportSchema}.
+ *
+ * Use it only when the data does not fit a schema (e.g. forms, whose file
+ * format predates the generic engine and links its parts by uuid).
+ */
+interface HasImportExportHandlerInterface
 {
-    /** @var Form[] $imported_forms */
-    private array $imported_forms = [];
-
-    /** @var array<string, ImportError> $failed_forms */
-    private array $failed_forms = [];
-
-    public function addImportedForm(Form $form): void
-    {
-        $this->imported_forms[] = $form;
-    }
-
-    /** @return Form[] */
-    public function getImportedForms(): array
-    {
-        return $this->imported_forms;
-    }
-
-    public function addFailedFormImport(
-        string $form_name,
-        ImportError $error,
-    ): void {
-        $this->failed_forms[$form_name] = $error;
-    }
-
-    /** @return array<string, ImportError> */
-    public function getFailedFormImports(): array
-    {
-        return $this->failed_forms;
-    }
+    public static function getImportExportHandler(): ImportExportHandlerInterface;
 }

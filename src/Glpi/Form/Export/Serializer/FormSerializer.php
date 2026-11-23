@@ -48,22 +48,13 @@ use Glpi\Form\Condition\Type;
 use Glpi\Form\Destination\AbstractCommonITILFormDestination;
 use Glpi\Form\Destination\FormDestination;
 use Glpi\Form\Destination\FormDestinationInterface;
-use Glpi\Form\Export\Context\DatabaseMapper;
-use Glpi\Form\Export\Result\ExportResult;
-use Glpi\Form\Export\Result\ImportError;
-use Glpi\Form\Export\Result\ImportResult;
-use Glpi\Form\Export\Result\ImportResultIssues;
-use Glpi\Form\Export\Result\ImportResultPreview;
 use Glpi\Form\Export\Specification\AccesControlPolicyContentSpecification;
 use Glpi\Form\Export\Specification\CommentContentSpecification;
 use Glpi\Form\Export\Specification\ConditionDataSpecification;
 use Glpi\Form\Export\Specification\CustomIllustrationContentSpecification;
-use Glpi\Form\Export\Specification\CustomTypeRequirementSpecification;
-use Glpi\Form\Export\Specification\DataRequirementSpecification;
 use Glpi\Form\Export\Specification\DestinationContentSpecification;
 use Glpi\Form\Export\Specification\ExportContentSpecification;
 use Glpi\Form\Export\Specification\FormContentSpecification;
-use Glpi\Form\Export\Specification\PluginRequirementSpecification;
 use Glpi\Form\Export\Specification\QuestionContentSpecification;
 use Glpi\Form\Export\Specification\SectionContentSpecification;
 use Glpi\Form\Export\Specification\TranslationContentSpecification;
@@ -75,6 +66,16 @@ use Glpi\Form\QuestionType\QuestionTypeItem;
 use Glpi\Form\QuestionType\QuestionTypeItemExtraDataConfig;
 use Glpi\Form\RenderLayout;
 use Glpi\Form\Section;
+use Glpi\ImportExport\Context\DatabaseMapper;
+use Glpi\ImportExport\ImportExportHandlerInterface;
+use Glpi\ImportExport\Result\ExportResult;
+use Glpi\ImportExport\Result\ImportError;
+use Glpi\ImportExport\Result\ImportResult;
+use Glpi\ImportExport\Result\ImportResultIssues;
+use Glpi\ImportExport\Result\ImportResultPreview;
+use Glpi\ImportExport\Specification\CustomTypeRequirementSpecification;
+use Glpi\ImportExport\Specification\DataRequirementSpecification;
+use Glpi\ImportExport\Specification\PluginRequirementSpecification;
 use Glpi\UI\IllustrationManager;
 use InvalidArgumentException;
 use JsonSerializable;
@@ -94,16 +95,16 @@ use function Safe\md5_file;
 use function Safe\preg_match;
 use function Safe\unlink;
 
-final class FormSerializer extends AbstractFormSerializer
+final class FormSerializer extends AbstractFormSerializer implements ImportExportHandlerInterface
 {
     public function getVersion(): int
     {
         return 1;
     }
 
-    /** @param array<Form> $forms */
-    public function exportFormsToJson(array $forms): ExportResult
+    public function exportItems(array $items): ExportResult
     {
+        $forms = array_filter($items, static fn(CommonDBTM $item) => $item instanceof Form);
         $export_specification = new ExportContentSpecification();
         $export_specification->version = $this->getVersion();
 
@@ -122,7 +123,7 @@ final class FormSerializer extends AbstractFormSerializer
     public function previewImport(
         string $json,
         DatabaseMapper $mapper,
-        array $skipped_forms = [],
+        array $skipped_items = [],
     ): ImportResultPreview {
         $export_specification = $this->deserialize($json);
 
@@ -137,8 +138,8 @@ final class FormSerializer extends AbstractFormSerializer
             // Skip ignored forms
             $form_id   = $form_spec->id;
             $form_name = $form_spec->name;
-            if (in_array($form_id, $skipped_forms)) {
-                $results->addSkippedForm($form_id, $form_name);
+            if (in_array($form_id, $skipped_items)) {
+                $results->addSkippedItem($form_id, $form_name);
                 continue;
             }
 
@@ -147,7 +148,7 @@ final class FormSerializer extends AbstractFormSerializer
             $missing_types = $this->getMissingCustomTypes($types_requirements);
             foreach ($missing_types as $missing_type) {
                 $message = sprintf(__('Unknown custom type: %s'), $missing_type);
-                $results->addFatalErrorForForm($form_id, $form_name, $message);
+                $results->addFatalError($form_id, $form_name, $message);
             }
 
             // Validate plugins requirements
@@ -155,11 +156,11 @@ final class FormSerializer extends AbstractFormSerializer
             $missing_plugins = $this->getMissingPlugins($plugins_requirements);
             foreach ($missing_plugins as $missing_plugin) {
                 $message = sprintf(__('Missing plugin: %s'), $missing_plugin);
-                $results->addFatalErrorForForm($form_id, $form_name, $message);
+                $results->addFatalError($form_id, $form_name, $message);
             }
 
             // Do not process others requirements if we reached a fatal error
-            if ($results->hasFatalErrorForForm($form_id)) {
+            if ($results->hasFatalError($form_id)) {
                 continue;
             }
 
@@ -168,9 +169,9 @@ final class FormSerializer extends AbstractFormSerializer
             $mapper->mapExistingItemsForRequirements($data_requirements);
 
             if ($mapper->validateRequirements($data_requirements)) {
-                $results->addValidForm($form_id, $form_name);
+                $results->addValidItem($form_id, $form_name);
             } else {
-                $results->addInvalidForm($form_id, $form_name);
+                $results->addInvalidItem($form_id, $form_name);
             }
         }
 
@@ -193,7 +194,7 @@ final class FormSerializer extends AbstractFormSerializer
             $requirements = $form_spec->data_requirements;
             $mapper->mapExistingItemsForRequirements($requirements);
 
-            $results->addIssuesForForm(
+            $results->addIssues(
                 $form_spec->id,
                 $mapper->getInvalidRequirements($requirements)
             );
@@ -202,10 +203,10 @@ final class FormSerializer extends AbstractFormSerializer
         return $results;
     }
 
-    public function importFormsFromJson(
+    public function importItems(
         string $json,
         DatabaseMapper $mapper,
-        array $skipped_forms = [],
+        array $skipped_items = [],
     ): ImportResult {
         $export_specification = $this->deserialize($json);
 
@@ -219,14 +220,14 @@ final class FormSerializer extends AbstractFormSerializer
         foreach ($export_specification->forms as $form_spec) {
             // Skip form if needed
             $form_id = $form_spec->id;
-            if (in_array($form_id, $skipped_forms)) {
+            if (in_array($form_id, $skipped_items)) {
                 continue;
             }
 
             // Validate custom types
             $types_requirements = $form_spec->custom_types_requirements;
             if (!$this->validateCustomTypesRequirements($types_requirements)) {
-                $result->addFailedFormImport(
+                $result->addFailedImport(
                     $form_spec->name,
                     ImportError::MISSING_CUSTOM_TYPE_REQUIREMENT,
                 );
@@ -235,7 +236,7 @@ final class FormSerializer extends AbstractFormSerializer
 
             $plugins_requirements = $form_spec->plugin_requirements;
             if (!$this->validatePluginsRequirements($plugins_requirements)) {
-                $result->addFailedFormImport(
+                $result->addFailedImport(
                     $form_spec->name,
                     ImportError::MISSING_PLUGIN_REQUIREMENT,
                 );
@@ -246,7 +247,7 @@ final class FormSerializer extends AbstractFormSerializer
             $mapper->mapExistingItemsForRequirements($data_requirements);
 
             if (!$mapper->validateRequirements($data_requirements)) {
-                $result->addFailedFormImport(
+                $result->addFailedImport(
                     $form_spec->name,
                     ImportError::MISSING_DATA_REQUIREMENT
                 );
@@ -254,7 +255,7 @@ final class FormSerializer extends AbstractFormSerializer
             }
 
             $form = $this->importFormFromSpec($form_spec, $mapper);
-            $result->addImportedForm($form);
+            $result->addImportedItem($form);
         }
 
         return $result;

@@ -8,6 +8,7 @@
  * http://glpi-project.org
  *
  * @copyright 2015-2026 Teclib' and contributors.
+ * @copyright 2003-2014 by the INDEPNET Development Team.
  * @licence   https://www.gnu.org/licenses/gpl-3.0.html
  *
  * ---------------------------------------------------------------------
@@ -32,11 +33,31 @@
  * ---------------------------------------------------------------------
  */
 
-namespace Glpi\Form\Export\Specification;
+namespace Glpi\ImportExport;
 
-final class PluginRequirementSpecification
+use CommonDBTM;
+use Glpi\ImportExport\Context\DatabaseMapper;
+use Glpi\ImportExport\Result\ExportResult;
+use Glpi\ImportExport\Result\ImportResult;
+use Glpi\ImportExport\Result\ImportResultIssues;
+use Glpi\ImportExport\Result\ImportResultPreview;
+
+/**
+ * What the import/export wizard needs from a serializer.
+ *
+ * Items are identified in the file by their id on the source instance, which
+ * is the key used to skip them or to resolve their issues.
+ */
+interface ImportExportHandlerInterface
 {
-    public function __construct(
-        public string $key = "",
-    ) {}
+    /** @param CommonDBTM[] $items */
+    public function exportItems(array $items): ExportResult;
+
+    /** @param array<int|string> $skipped_items */
+    public function previewImport(string $json, DatabaseMapper $mapper, array $skipped_items = []): ImportResultPreview;
+
+    public function listIssues(DatabaseMapper $mapper, string $json): ImportResultIssues;
+
+    /** @param array<int|string> $skipped_items */
+    public function importItems(string $json, DatabaseMapper $mapper, array $skipped_items = []): ImportResult;
 }

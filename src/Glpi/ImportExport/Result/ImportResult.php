@@ -33,22 +33,48 @@
  * ---------------------------------------------------------------------
  */
 
-namespace Glpi\Form\Export\Result;
+namespace Glpi\ImportExport\Result;
 
-final class ExportResult
+use CommonDBTM;
+
+final class ImportResult
 {
-    public function __construct(
-        private string $filename,
-        private string $json_content,
-    ) {}
+    /** @var CommonDBTM[] $imported_items */
+    private array $imported_items = [];
 
-    public function getFileName(): string
+    /** @var array<string, ImportError> $failed_items */
+    private array $failed_items = [];
+
+    /** @var array<int, list<string>> $notes By object id of the imported item */
+    private array $notes = [];
+
+    /** @param list<string> $notes What the administrator should know about this import */
+    public function addImportedItem(CommonDBTM $item, array $notes = []): void
     {
-        return $this->filename;
+        $this->imported_items[] = $item;
+        $this->notes[spl_object_id($item)] = $notes;
     }
 
-    public function getJsonContent(): string
+    /** @return list<string> */
+    public function getNotes(CommonDBTM $item): array
     {
-        return $this->json_content;
+        return $this->notes[spl_object_id($item)] ?? [];
+    }
+
+    /** @return CommonDBTM[] */
+    public function getImportedItems(): array
+    {
+        return $this->imported_items;
+    }
+
+    public function addFailedImport(string $name, ImportError $error): void
+    {
+        $this->failed_items[$name] = $error;
+    }
+
+    /** @return array<string, ImportError> */
+    public function getFailedImports(): array
+    {
+        return $this->failed_items;
     }
 }

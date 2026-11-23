@@ -79,8 +79,6 @@ use Glpi\Form\Destination\CommonITILField\TemplateFieldConfig;
 use Glpi\Form\Destination\CommonITILField\TemplateFieldStrategy;
 use Glpi\Form\Destination\CommonITILField\TitleField;
 use Glpi\Form\Destination\FormDestinationTicket;
-use Glpi\Form\Export\Context\DatabaseMapper;
-use Glpi\Form\Export\Result\ImportError;
 use Glpi\Form\Export\Serializer\FormSerializer;
 use Glpi\Form\Form;
 use Glpi\Form\FormTranslation;
@@ -106,6 +104,8 @@ use Glpi\Form\Tag\CommentTitleTagProvider;
 use Glpi\Form\Tag\FormTagProvider;
 use Glpi\Form\Tag\QuestionTagProvider;
 use Glpi\Form\Tag\SectionTagProvider;
+use Glpi\ImportExport\Context\DatabaseMapper;
+use Glpi\ImportExport\Result\ImportError;
 use Glpi\Tests\DbTestCase;
 use Glpi\Tests\FormBuilder;
 use Glpi\Tests\FormTesterTrait;
@@ -151,7 +151,7 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: export form
         $_SESSION['glpi_currenttime'] = "2024-09-09 08:38:28";
-        $result = self::$serializer->exportFormsToJson([$form]);
+        $result = self::$serializer->exportItems([$form]);
 
         // Assert: filename should be the slugified form name + .json
         $this->assertEquals("my-form-2024-09-09.json", $result->getFileName());
@@ -168,7 +168,7 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: export forms
         $_SESSION['glpi_currenttime'] = "2024-09-09 08:38:28";
-        $result = self::$serializer->exportFormsToJson($forms);
+        $result = self::$serializer->exportItems($forms);
 
         // Assert: filename should reference the number of forms
         $this->assertStringMatchesFormat(
@@ -188,8 +188,8 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: export twice the same set of forms
         $_SESSION['glpi_currenttime'] = "2024-09-09 08:38:28";
-        $result_a = self::$serializer->exportFormsToJson($forms);
-        $result_b = self::$serializer->exportFormsToJson($forms);
+        $result_a = self::$serializer->exportItems($forms);
+        $result_b = self::$serializer->exportItems($forms);
 
         // Assert: file names should be equals since it is the same forms
         $this->assertEquals(
@@ -214,8 +214,8 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: export the two sets of forms
         $_SESSION['glpi_currenttime'] = "2024-09-09 08:38:28";
-        $result_a = self::$serializer->exportFormsToJson($forms_set_a);
-        $result_b = self::$serializer->exportFormsToJson($forms_set_b);
+        $result_a = self::$serializer->exportItems($forms_set_a);
+        $result_b = self::$serializer->exportItems($forms_set_b);
 
         // Assert: file names should not be equals since it is different forms
         $this->assertNotEquals(
@@ -292,14 +292,14 @@ final class FormSerializerTest extends DbTestCase
         $this->deleteItem(Entity::class, $entity->getID());
 
         // Import should fail as the entity can't be found
-        $import_result = self::$serializer->importFormsFromJson(
+        $import_result = self::$serializer->importItems(
             $json,
             new DatabaseMapper(Session::getActiveEntities())
         );
-        $this->assertCount(0, $import_result->getImportedForms());
+        $this->assertCount(0, $import_result->getImportedItems());
         $this->assertEquals([
             $form->fields['name'] => ImportError::MISSING_DATA_REQUIREMENT,
-        ], $import_result->getFailedFormImports());
+        ], $import_result->getFailedImports());
     }
 
     public function testExportAndImportInAnotherEntity(): void
@@ -1201,7 +1201,7 @@ final class FormSerializerTest extends DbTestCase
         $form = $this->createAndGetFormWithBasicPropertiesFilled();
 
         // Act: export the form and preview the import
-        $results = self::$serializer->exportFormsToJson([$form]);
+        $results = self::$serializer->exportItems([$form]);
         $preview = self::$serializer->previewImport(
             $results->getJsonContent(),
             new DatabaseMapper([$this->getTestRootEntity(only_id: true)])
@@ -1210,9 +1210,9 @@ final class FormSerializerTest extends DbTestCase
         // Assert: the form should be valid
         $this->assertEquals(
             [$form->fields['name']],
-            array_values($preview->getValidForms())
+            array_values($preview->getValidItems())
         );
-        $this->assertEquals([], $preview->getInvalidForms());
+        $this->assertEquals([], $preview->getInvalidItems());
     }
 
     public function testPreviewImportWithInvalidForm(): void
@@ -1239,10 +1239,10 @@ final class FormSerializerTest extends DbTestCase
         );
 
         // Assert: the form should be invalid
-        $this->assertEquals([], $preview->getValidForms());
+        $this->assertEquals([], $preview->getValidItems());
         $this->assertEquals(
             [$form->fields['name']],
-            array_values($preview->getInvalidForms()),
+            array_values($preview->getInvalidItems()),
         );
     }
 
@@ -1252,7 +1252,7 @@ final class FormSerializerTest extends DbTestCase
         $form = $this->createAndGetFormWithBasicPropertiesFilled();
 
         // Act: export the form and preview the import
-        $results = self::$serializer->exportFormsToJson([$form]);
+        $results = self::$serializer->exportItems([$form]);
         $preview = self::$serializer->previewImport(
             $results->getJsonContent(),
             new DatabaseMapper([$this->getTestRootEntity(only_id: true)]),
@@ -1260,11 +1260,11 @@ final class FormSerializerTest extends DbTestCase
         );
 
         // Assert: the form should be valid
-        $this->assertEquals([], $preview->getValidForms());
-        $this->assertEquals([], $preview->getInvalidForms());
+        $this->assertEquals([], $preview->getValidItems());
+        $this->assertEquals([], $preview->getInvalidItems());
         $this->assertEquals(
             [$form->fields['name']],
-            array_values($preview->getSkippedForms())
+            array_values($preview->getSkippedItems())
         );
     }
 
@@ -1292,10 +1292,10 @@ final class FormSerializerTest extends DbTestCase
         );
 
         // Assert: the form should be invalid
-        $this->assertEquals([], $preview->getValidForms());
+        $this->assertEquals([], $preview->getValidItems());
         $this->assertEquals(
             [$form->fields['name']],
-            array_values($preview->getInvalidForms())
+            array_values($preview->getInvalidItems())
         );
 
         // Add mapped item to fix the form
@@ -1312,9 +1312,9 @@ final class FormSerializerTest extends DbTestCase
         // Assert: the form should be fixed
         $this->assertEquals(
             [$form->fields['name']],
-            array_values($preview->getValidForms()),
+            array_values($preview->getValidItems()),
         );
-        $this->assertEquals([], $preview->getInvalidForms());
+        $this->assertEquals([], $preview->getInvalidItems());
     }
 
     public function testImportRequirementsAreCheckedInVisibleEntities(): void
@@ -1333,15 +1333,15 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: enable sub entities; export and import form
         $this->setEntity($test_root_entity_id, subtree: true);
-        $result = self::$serializer->exportFormsToJson([$form]);
-        $import_result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->exportItems([$form]);
+        $import_result = self::$serializer->importItems(
             $result->getJsonContent(),
             new DatabaseMapper(Session::getActiveEntities())
         );
 
         // Assert: import should have succeeded
-        $this->assertCount(1, $import_result->getImportedForms());
-        $this->assertCount(0, $import_result->getFailedFormImports());
+        $this->assertCount(1, $import_result->getImportedItems());
+        $this->assertCount(0, $import_result->getFailedImports());
     }
 
     public function testImportRequirementsAreNotCheckedInHiddenEntities(): void
@@ -1359,15 +1359,15 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: disable sub entities; export and import form
         $this->setEntity($test_root_entity_id, subtree: false);
-        $result = self::$serializer->exportFormsToJson([$form]);
-        $import_result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->exportItems([$form]);
+        $import_result = self::$serializer->importItems(
             $result->getJsonContent(),
             new DatabaseMapper(Session::getActiveEntities())
         );
 
         // Assert: import should have failed
-        $this->assertCount(0, $import_result->getImportedForms());
-        $this->assertCount(1, $import_result->getFailedFormImports());
+        $this->assertCount(0, $import_result->getImportedItems());
+        $this->assertCount(1, $import_result->getFailedImports());
     }
 
     public function testImportRequirementsAreNotCheckedAndFixed(): void
@@ -1386,16 +1386,16 @@ final class FormSerializerTest extends DbTestCase
         // Act: export the form; delete the entity to make the form invalid; import the form
         $json = $this->exportForm($form);
         $this->deleteItem(Entity::class, $entity->getID());
-        $import_result = self::$serializer->importFormsFromJson(
+        $import_result = self::$serializer->importItems(
             $json,
             new DatabaseMapper([$this->getTestRootEntity(only_id: true)])
         );
 
         // Assert: the import should fail
-        $this->assertCount(0, $import_result->getImportedForms());
+        $this->assertCount(0, $import_result->getImportedItems());
         $this->assertEquals([
             $form->fields['name'] => ImportError::MISSING_DATA_REQUIREMENT,
-        ], $import_result->getFailedFormImports());
+        ], $import_result->getFailedImports());
 
         // Add mapped item to fix the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(only_id: true)]);
@@ -1406,11 +1406,11 @@ final class FormSerializerTest extends DbTestCase
         );
 
         // Act: import the form again
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper, []);
+        $import_result = self::$serializer->importItems($json, $mapper, []);
 
         // Assert: the import should succeed
-        $this->assertCount(1, $import_result->getImportedForms());
-        $this->assertCount(0, $import_result->getFailedFormImports());
+        $this->assertCount(1, $import_result->getImportedItems());
+        $this->assertCount(0, $import_result->getFailedImports());
     }
 
     public function testImportWithSkippedForms(): void
@@ -1423,19 +1423,19 @@ final class FormSerializerTest extends DbTestCase
         }
 
         // Act: export the forms; import only the first and the third form
-        $results = self::$serializer->exportFormsToJson($forms);
-        $import_result = self::$serializer->importFormsFromJson(
+        $results = self::$serializer->exportItems($forms);
+        $import_result = self::$serializer->importItems(
             $results->getJsonContent(),
             new DatabaseMapper([$this->getTestRootEntity(only_id: true)]),
             [json_decode($results->getJsonContent(), true)['forms'][1]['id']],
         );
 
         // Assert: only the first and the third form should have been imported
-        $this->assertCount(2, $import_result->getImportedForms());
+        $this->assertCount(2, $import_result->getImportedItems());
         $this->assertEquals([
             $forms[0]->fields['name'],
             $forms[2]->fields['name'],
-        ], array_map(fn(Form $form) => $form->fields['name'], $import_result->getImportedForms()));
+        ], array_map(fn(Form $form) => $form->fields['name'], $import_result->getImportedItems()));
     }
 
     public function testAllFieldsAreExportedAndImported(): void
@@ -2486,13 +2486,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import form
         $json = $this->getFormJson('submit-with-item-condition.json');
-        $result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->importItems(
             json: $json,
             mapper: new DatabaseMapper([$this->getTestRootEntity(true)]),
         );
 
         // Assert: condition should be updated with the computer id
-        $form = $result->getImportedForms()[0];
+        $form = $result->getImportedItems()[0];
         $condition_value = $form->getConfiguredConditionsData()[0]->getValue();
         $this->assertEquals([
             "itemtype" => Computer::class,
@@ -2510,13 +2510,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import form
         $json = $this->getFormJson('section-with-item-condition.json');
-        $result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->importItems(
             json: $json,
             mapper: new DatabaseMapper([$this->getTestRootEntity(true)]),
         );
 
         // Assert: condition should be updated with the computer id
-        $form = $result->getImportedForms()[0];
+        $form = $result->getImportedItems()[0];
         $sections = $form->getSections();
         next($sections);  // Go to second question
         $section = current($sections);
@@ -2537,13 +2537,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import form
         $json = $this->getFormJson('question-with-item-condition.json');
-        $result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->importItems(
             json: $json,
             mapper: new DatabaseMapper([$this->getTestRootEntity(true)]),
         );
 
         // Assert: condition should be updated with the computer id
-        $form = $result->getImportedForms()[0];
+        $form = $result->getImportedItems()[0];
         $questions = $form->getQuestions();
         next($questions);  // Go to second question
         $question = current($questions);
@@ -2564,13 +2564,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import form
         $json = $this->getFormJson('comment-with-item-condition.json');
-        $result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->importItems(
             json: $json,
             mapper: new DatabaseMapper([$this->getTestRootEntity(true)]),
         );
 
         // Assert: condition should be updated with the computer id
-        $form = $result->getImportedForms()[0];
+        $form = $result->getImportedItems()[0];
         $comments = $form->getFormComments();
         $comment = current($comments);
         $condition_value = $comment->getConfiguredConditionsData()[0]->getValue();
@@ -2590,13 +2590,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import form
         $json = $this->getFormJson('destination-with-item-condition.json');
-        $result = self::$serializer->importFormsFromJson(
+        $result = self::$serializer->importItems(
             json: $json,
             mapper: new DatabaseMapper([$this->getTestRootEntity(true)]),
         );
 
         // Assert: condition should be updated with the computer id
-        $form = $result->getImportedForms()[0];
+        $form = $result->getImportedItems()[0];
         $destinations = $form->getDestinations();
         $destination = current($destinations);
         $condition_value = $destination->getConfiguredConditionsData()[0]->getValue();
@@ -2656,13 +2656,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(true)]);
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper);
+        $import_result = self::$serializer->importItems($json, $mapper);
 
         // Assert: the import should fail
-        $this->assertEmpty($import_result->getImportedForms());
+        $this->assertEmpty($import_result->getImportedItems());
         $this->assertEquals([
             'Test form' => ImportError::MISSING_CUSTOM_TYPE_REQUIREMENT,
-        ], $import_result->getFailedFormImports());
+        ], $import_result->getFailedImports());
     }
 
     public function testImportWithCustomAsset(): void
@@ -2674,11 +2674,11 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(true)]);
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper);
+        $import_result = self::$serializer->importItems($json, $mapper);
 
         // Assert: the import should succeed
-        $this->assertCount(1, $import_result->getImportedForms());
-        $this->assertEmpty($import_result->getFailedFormImports());
+        $this->assertCount(1, $import_result->getImportedItems());
+        $this->assertEmpty($import_result->getFailedImports());
     }
 
     public function testExportThatUseQuestionTypeFromPlugin(): void
@@ -2813,11 +2813,11 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(true)]);
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper);
+        $import_result = self::$serializer->importItems($json, $mapper);
 
         // Assert: make sure the layout is correctly imported
-        $this->assertEmpty($import_result->getFailedFormImports());
-        $imported_form = $import_result->getImportedForms()[0];
+        $this->assertEmpty($import_result->getFailedImports());
+        $imported_form = $import_result->getImportedItems()[0];
         $this->assertEquals(RenderLayout::SINGLE_PAGE->value, $imported_form->fields['render_layout']);
     }
 
@@ -2871,13 +2871,13 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(true)]);
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper);
+        $import_result = self::$serializer->importItems($json, $mapper);
 
         // Assert: the import should fail
-        $this->assertEmpty($import_result->getImportedForms());
+        $this->assertEmpty($import_result->getImportedItems());
         $this->assertEquals([
             'Test form' => ImportError::MISSING_PLUGIN_REQUIREMENT,
-        ], $import_result->getFailedFormImports());
+        ], $import_result->getFailedImports());
     }
 
     public function testImportWithExistingPlugin(): void
@@ -2887,11 +2887,11 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(true)]);
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper);
+        $import_result = self::$serializer->importItems($json, $mapper);
 
         // Assert: the import should succeed
-        $this->assertEmpty($import_result->getFailedFormImports());
-        $this->assertCount(1, $import_result->getImportedForms());
+        $this->assertEmpty($import_result->getFailedImports());
+        $this->assertCount(1, $import_result->getImportedItems());
     }
 
     public function testPreviewWithMissingPlugin(): void
@@ -2904,11 +2904,11 @@ final class FormSerializerTest extends DbTestCase
         $preview_results = self::$serializer->previewImport($json, $mapper);
 
         // Assert: the preview should fail with a fatal error
-        $this->assertEmpty($preview_results->getValidForms());
-        $this->assertEmpty($preview_results->getSkippedForms());
-        $this->assertCount(1, $preview_results->getFormsWithFatalErrors());
+        $this->assertEmpty($preview_results->getValidItems());
+        $this->assertEmpty($preview_results->getSkippedItems());
+        $this->assertCount(1, $preview_results->getItemsWithFatalErrors());
 
-        $forms = $preview_results->getFormsWithFatalErrors();
+        $forms = $preview_results->getItemsWithFatalErrors();
         $form = current($forms);
         $this->assertEquals(
             "Missing plugin: advancedforms",
@@ -2926,9 +2926,9 @@ final class FormSerializerTest extends DbTestCase
         $preview_results = self::$serializer->previewImport($json, $mapper);
 
         // Assert: the preview should succeed
-        $this->assertEmpty($preview_results->getFormsWithFatalErrors());
-        $this->assertEmpty($preview_results->getSkippedForms());
-        $this->assertCount(1, $preview_results->getValidForms());
+        $this->assertEmpty($preview_results->getItemsWithFatalErrors());
+        $this->assertEmpty($preview_results->getSkippedItems());
+        $this->assertCount(1, $preview_results->getValidItems());
     }
 
     public static function specificImportSucceedProvider(): array
@@ -2950,11 +2950,11 @@ final class FormSerializerTest extends DbTestCase
 
         // Act: import the form
         $mapper = new DatabaseMapper([$this->getTestRootEntity(true)]);
-        $results = self::$serializer->importFormsFromJson($json, $mapper);
+        $results = self::$serializer->importItems($json, $mapper);
 
         // Assert: the import should succeed
-        $this->assertEmpty($results->getFailedFormImports());
-        $this->assertCount(1, $results->getImportedForms());
+        $this->assertEmpty($results->getFailedImports());
+        $this->assertCount(1, $results->getImportedItems());
     }
 
     public function testExportAndImportItemQuestionTypeWithMultipleItemsAsDefaultValue(): void

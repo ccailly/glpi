@@ -8,6 +8,7 @@
  * http://glpi-project.org
  *
  * @copyright 2015-2026 Teclib' and contributors.
+ * @copyright 2003-2014 by the INDEPNET Development Team.
  * @licence   https://www.gnu.org/licenses/gpl-3.0.html
  *
  * ---------------------------------------------------------------------
@@ -32,30 +33,15 @@
  * ---------------------------------------------------------------------
  */
 
-namespace Glpi\Controller\Form\Import;
+namespace Glpi\ImportExport\Result;
 
-use Glpi\Controller\AbstractController;
-use Glpi\Exception\Http\AccessDeniedHttpException;
-use Glpi\Form\Form;
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
-use Symfony\Component\Routing\Attribute\Route;
-
-/**
- * Initial entry point of the import form process.
- */
-final class Step1IndexController extends AbstractController
+enum ImportError
 {
-    #[Route("/Form/Import", name: "glpi_form_import", methods: "GET")]
-    public function __invoke(Request $request): Response
-    {
-        if (!Form::canCreate()) {
-            throw new AccessDeniedHttpException();
-        }
-
-        return $this->render("pages/admin/form/import/step1_index.html.twig", [
-            'title' => __("Import form"),
-            'menu'  => ['admin', Form::class],
-        ]);
-    }
+    case MISSING_DATA_REQUIREMENT;
+    case MISSING_CUSTOM_TYPE_REQUIREMENT;
+    case MISSING_PLUGIN_REQUIREMENT;
+    /** Unknown type, existing item... */
+    case FATAL_ERROR;
+    /** The item was refused by the target instance. */
+    case INVALID_DATA;
 }

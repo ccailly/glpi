@@ -44,13 +44,13 @@ use Glpi\Form\Comment;
 use Glpi\Form\Condition\Type;
 use Glpi\Form\Destination\CommonITILField\SimpleValueConfig;
 use Glpi\Form\Destination\FormDestination;
-use Glpi\Form\Export\Context\DatabaseMapper;
 use Glpi\Form\Form;
 use Glpi\Form\FormTranslation;
 use Glpi\Form\Question;
 use Glpi\Form\QuestionType\QuestionTypeShortText;
 use Glpi\Form\Section;
 use Glpi\Form\Tag\Tag;
+use Glpi\ImportExport\Context\DatabaseMapper;
 use LogicException;
 use Problem;
 use RuntimeException;
@@ -717,16 +717,16 @@ trait FormTesterTrait
 
     private function exportForm(Form $form): string
     {
-        return self::$serializer->exportFormsToJson([$form])->getJsonContent();
+        return self::$serializer->exportItems([$form])->getJsonContent();
     }
 
     private function importForm(
         string $json,
         DatabaseMapper $mapper,
-        array $skipped_forms = [],
+        array $skipped_items = [],
     ): Form {
-        $import_result = self::$serializer->importFormsFromJson($json, $mapper, $skipped_forms);
-        $imported_forms = $import_result->getImportedForms();
+        $import_result = self::$serializer->importItems($json, $mapper, $skipped_items);
+        $imported_forms = $import_result->getImportedItems();
         $this->assertCount(1, $imported_forms, "Failed to import form from JSON: $json");
         $form_copy = current($imported_forms);
         return $form_copy;
