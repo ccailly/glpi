@@ -49,6 +49,7 @@ use Glpi\Asset\CustomFieldType\TextType;
 use Glpi\Asset\CustomFieldType\TypeInterface;
 use Glpi\CustomObject\AbstractDefinition;
 use Glpi\Features\AssetImage;
+use Glpi\ImportExport\ExportSchema;
 use Glpi\Inventory\MainAsset\GenericAsset;
 use Glpi\Inventory\MainAsset\MainAsset;
 use Glpi\Inventory\MainAsset\NetworkEquipment as NetworkEquipmentMainAsset;
@@ -78,6 +79,35 @@ final class AssetDefinition extends AbstractDefinition
     public static function getSectorizedDetails(): array
     {
         return ['config', self::class];
+    }
+
+    public static function getExportSchema(): ExportSchema
+    {
+        return new ExportSchema(
+            json: ['profiles', 'translations', 'capacities', 'fields_display'],
+            references: [
+                'profiles.#'                              => Profile::class,
+                'fields_display.*.field_options.readonly' => Profile::class,
+                'fields_display.*.field_options.hidden'   => Profile::class,
+            ],
+            classes: ['capacities.*.name'],
+            unique: ['system_name'],
+            pictures: ['picture'],
+            children: [CustomFieldDefinition::class => new ExportSchema(
+                json: ['field_options', 'default_value', 'translations'],
+                references: [
+                    'field_options.readonly' => Profile::class,
+                    'field_options.hidden'   => Profile::class,
+                    'default_value'          => static fn(array $field) => $field['itemtype'] ?? null, // dropdown values
+                ],
+                classes: ['type', 'itemtype'],
+            )],
+            // `fields_display` is stored as a list of {key, order, field_options}, but given as two arrays.
+            prepare_input: static fn(array $input) => [
+                'fields_display' => array_column($input['fields_display'], 'key', 'order'),
+                'field_options'  => array_column($input['fields_display'], 'field_options', 'key'),
+            ] + $input,
+        );
     }
 
     public static function getCustomObjectBaseClass(): string

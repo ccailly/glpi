@@ -43,6 +43,8 @@ use Gettext\Languages\Language;
 use Glpi\Application\View\TemplateRenderer;
 use Glpi\Asset\CustomFieldDefinition;
 use Glpi\Dashboard\Grid;
+use Glpi\ImportExport\ExportableInterface;
+use Glpi\ImportExport\ExportSchema;
 use Glpi\Locale\LanguageRegistry;
 use LogicException;
 use Profile;
@@ -57,7 +59,7 @@ use function Safe\preg_match;
  * Abstract class for custom object definition managers
  * @template ConcreteClass of CommonDBTM
  */
-abstract class AbstractDefinition extends CommonDBTM
+abstract class AbstractDefinition extends CommonDBTM implements ExportableInterface
 {
     /**
      * System name regex pattern.
@@ -155,6 +157,15 @@ abstract class AbstractDefinition extends CommonDBTM
     protected function getPossibleCustomObjectRights(): array
     {
         return $this->getCustomObjectClassInstance()->getRights();
+    }
+
+    public static function getExportSchema(): ExportSchema
+    {
+        return new ExportSchema(
+            json: ['profiles', 'translations'],
+            references: ['profiles.#' => Profile::class],
+            unique: ['system_name'],
+        );
     }
 
     public static function getNameField()
